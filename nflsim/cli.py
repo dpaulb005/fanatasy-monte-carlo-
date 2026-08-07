@@ -48,11 +48,20 @@ def _load_result():
     if not RESULT.exists():
         sys.exit("no simulation found - run `python -m nflsim simulate` first")
     z = np.load(RESULT, allow_pickle=True)
-    return {
+    out = {
         "totals": z["totals"], "games_played": z["games_played"],
         "team_points": z["team_points"].item(), "team_wins": z["team_wins"].item(),
         "n_sims": int(z["n_sims"]),
     }
+    # Weekly capture is optional; older result files will not have it.
+    if "weekly_stats" in z.files:
+        out.update({
+            "weekly_stats": z["weekly_stats"], "weekly_fp": z["weekly_fp"],
+            "weekly_played": z["weekly_played"],
+            "week_opponent": z["week_opponent"].item(),
+            "week_quantiles": list(z["week_quantiles"]),
+        })
+    return out
 
 
 def _frame(bundle, result, args) -> pd.DataFrame:
@@ -83,12 +92,20 @@ def cmd_simulate(args):
     # The suffix must stay .npz: np.savez appends it when the name lacks it,
     # which would write beside the path we then try to rename.
     tmp = RESULT.with_suffix(".part.npz")
-    np.savez(
-        tmp, totals=res["totals"], games_played=res["games_played"],
+    payload = dict(
+        totals=res["totals"], games_played=res["games_played"],
         team_points=np.array(res["team_points"], dtype=object),
         team_wins=np.array(res["team_wins"], dtype=object),
         n_sims=res["n_sims"],
     )
+    if "weekly_stats" in res:
+        payload.update(
+            weekly_stats=res["weekly_stats"], weekly_fp=res["weekly_fp"],
+            weekly_played=res["weekly_played"],
+            week_opponent=np.array(res["week_opponent"], dtype=object),
+            week_quantiles=np.array(res["week_quantiles"]),
+        )
+    np.savez(tmp, **payload)
     tmp.replace(RESULT)
     print(f"saved {args.sims:,} simulated seasons to {RESULT}")
 
@@ -112,6 +129,17 @@ def cmd_projections(args):
     for pos in (args.pos.split(",") if args.pos else ["QB", "RB", "WR", "TE"]):
         board.positional(df, pos.strip().upper(), n=args.top,
                          scoring_name=_scoring(args).name)
+
+
+def cmd_html(args):
+    """Write a self-contained HTML report of players and their weeks."""
+    from .report_html import generate
+    b, res = _load_bundle(), _load_result()
+    if "weekly_fp" not in res:
+        print("note: this result file has no weekly capture - re-run `simulate` "
+              "to get game-by-game detail", file=sys.stderr)
+    path = generate(b, res, _frame(b, res, args), _scoring(args), Path(args.out))
+    print(f"wrote {path}  ({path.stat().st_size/1e6:.1f} MB)")
 
 
 def cmd_outliers(args):
@@ -236,6 +264,11 @@ def main(argv=None):
 
     t = common(sub.add_parser("teams", help="team wins, scoring and coaching"))
     t.set_defaults(func=cmd_teams)
+
+    h = common(sub.add_parser(
+        "html", help="self-contained HTML report: players and week-by-week detail"))
+    h.add_argument("--out", default="report.html")
+    h.set_defaults(func=cmd_html)
 
     o = common(sub.add_parser(
         "outliers", help="top projected seasons and biggest movers vs last year"))

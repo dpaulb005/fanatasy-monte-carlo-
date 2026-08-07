@@ -105,9 +105,24 @@ def draw_team_shocks(bundle: Bundle, n_sims: int, rng: np.random.Generator,
     return out
 
 
+WEEK_QUANTILES = (10, 25, 50, 75, 90)
+
+
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
-               use_injuries: bool = True, use_role_variance: bool = True) -> dict:
-    """Simulate the full regular season `n_sims` times."""
+               use_injuries: bool = True, use_role_variance: bool = True,
+               scoring=None, weekly: bool = True) -> dict:
+    """Simulate the full regular season `n_sims` times.
+
+    When `weekly` is set, per-week summaries are captured alongside the season
+    totals. Keeping the full weekly distribution would mean an array of shape
+    (weeks, stats, sims, players) -- several gigabytes -- so instead the schedule
+    is walked in week order, a single week's buffer is accumulated, and its
+    summaries are taken and the buffer discarded before the next week starts.
+    That costs one extra (stats, sims, players) array rather than eighteen.
+    """
+    from .analysis import fantasy_points
+    from .config import PPR
+    scoring = scoring or PPR
     rng = np.random.default_rng(seed)
     P = len(bundle.player_table)
     sched = bundle.schedule
@@ -125,6 +140,28 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     team_points = {t: np.zeros((n_sims,), dtype=np.float32) for t in bundle.teams}
     team_wins = {t: np.zeros((n_sims,), dtype=np.float32) for t in bundle.teams}
 
+    # Per-week capture. One buffer, reused: flushed to summaries at each week
+    # boundary so only the current week is ever held at full resolution.
+    P_ = P
+    week_buf = np.zeros((NSTAT, n_sims, P_), dtype=np.float32) if weekly else None
+    weekly_stats = np.zeros((weeks, NSTAT, P_), dtype=np.float32) if weekly else None
+    weekly_fp = np.zeros((weeks, len(WEEK_QUANTILES) + 2, P_), dtype=np.float32) if weekly else None
+    weekly_played = np.zeros((weeks, P_), dtype=np.float32) if weekly else None
+    week_opp: dict[int, dict[str, str]] = {}
+    cur_week = None
+
+    def flush(w):
+        """Summarise the buffered week, then clear it."""
+        if not weekly or w is None:
+            return
+        weekly_stats[w] = week_buf.mean(axis=1)
+        fp = fantasy_points(week_buf, scoring)
+        weekly_fp[w, 0] = fp.mean(axis=0)
+        weekly_fp[w, 1] = fp.std(axis=0)
+        for qi, q in enumerate(WEEK_QUANTILES):
+            weekly_fp[w, 2 + qi] = np.percentile(fp, q, axis=0)
+        week_buf[:] = 0.0
+
     sim = GameSimulator(bundle.physics, rng, n_sims)
     t0 = time.time()
     n_games = len(sched)
@@ -135,6 +172,11 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
             continue
         hm, aw = bundle.teams[home], bundle.teams[away]
         w = int(row.week) - 1
+        if weekly and w != cur_week:
+            flush(cur_week)
+            cur_week = w
+        week_opp.setdefault(w, {})[home] = f"vs {away}"
+        week_opp.setdefault(w, {})[away] = f"@ {home}"
 
         av_h = avail[w][:, hm.gidx]
         av_a = avail[w][:, aw.gidx]
@@ -151,6 +193,11 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
 
         totals[:, :, hm.gidx] += res["home_stats"]
         totals[:, :, aw.gidx] += res["away_stats"]
+        if weekly:
+            week_buf[:, :, hm.gidx] += res["home_stats"]
+            week_buf[:, :, aw.gidx] += res["away_stats"]
+            weekly_played[w, hm.gidx] += av_h.mean(axis=0)
+            weekly_played[w, aw.gidx] += av_a.mean(axis=0)
         games_played[:, hm.gidx] += av_h
         games_played[:, aw.gidx] += av_a
 
@@ -166,14 +213,25 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
             print(f"  game {gi+1}/{n_games}  elapsed {el:5.1f}s  eta {eta:5.1f}s",
                   file=sys.stderr, flush=True)
 
+    flush(cur_week)
+
     if verbose:
         print(f"  simulated {n_games} games x {n_sims} seasons in "
               f"{time.time()-t0:.1f}s", file=sys.stderr, flush=True)
 
-    return {
+    out = {
         "totals": totals,
         "games_played": games_played,
         "team_points": team_points,
         "team_wins": team_wins,
         "n_sims": n_sims,
     }
+    if weekly:
+        out.update({
+            "weekly_stats": weekly_stats,       # (weeks, stat, player) means
+            "weekly_fp": weekly_fp,             # (weeks, [mean, sd, *quantiles], player)
+            "weekly_played": weekly_played,     # (weeks, player) availability
+            "week_opponent": week_opp,          # week -> team -> opponent label
+            "week_quantiles": list(WEEK_QUANTILES),
+        })
+    return out
