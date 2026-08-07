@@ -17,6 +17,16 @@ inside the same simulation replication; it does not compare cross-position raw
 points. Tests live in `tests/test_report_html.py`, and the research/design notes
 are in `docs/RESEARCH.md`.
 
+The next continuation adds `python -m nflsim factors`, a controlled scenario
+comparison for injuries, role variance, team-efficiency uncertainty, coaching
+scheme and neutral team context. It also fixes two backtest/model inputs:
+`build._age()` now uses the projected season, and roster continuity now requires
+the player to remain on the same team. `backtest` reports a symmetric, exact
+split of total error into games-played and points-per-game components. See
+`docs/RESEARCH_LOOP.md` for researched candidates and promotion gates.
+The first results and the corrected RB/QB error diagnosis are recorded in
+`docs/FACTOR_FINDINGS.md`.
+
 ---
 
 ## Run it

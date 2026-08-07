@@ -825,15 +825,26 @@ def roster_continuity(season: int) -> dict[str, float]:
     except Exception:
         return {}
     cur = data.rosters(season)
-    have = set(cur.gsis_id.dropna())
+    prev = data.rosters(season - 1)
+    return _roster_continuity_from_frames(snaps, prev, cur)
 
+
+def _roster_continuity_from_frames(snaps: pd.DataFrame, prev: pd.DataFrame,
+                                   cur: pd.DataFrame) -> dict[str, float]:
+    """Pure continuity calculation, requiring player *and team* retention.
+
+    A player who remains in the league but changes clubs did not return any
+    snaps to his former team.  Matching on player ID alone silently credited
+    every free-agent and trade departure as retained continuity.
+    """
     snaps = snaps.copy()
-    # snap_counts identifies players by pfr_player_id; bridge via the roster file.
-    prev = data.rosters(season - 1)[["gsis_id", "pfr_id", "team"]].dropna(subset=["pfr_id"])
+    prev = prev[["gsis_id", "pfr_id", "team"]].dropna(subset=["pfr_id"])
     bridge = dict(zip(prev.pfr_id, prev.gsis_id))
     snaps["gsis_id"] = snaps.pfr_player_id.map(bridge)
+    have = set(zip(cur.gsis_id, cur.team))
+    retained = pd.MultiIndex.from_frame(snaps[["gsis_id", "team"]]).isin(have)
 
     tot = snaps.groupby("team").offense_snaps.sum()
-    kept = snaps[snaps.gsis_id.isin(have)].groupby("team").offense_snaps.sum()
+    kept = snaps[retained].groupby("team").offense_snaps.sum()
     out = (kept / tot).dropna()
     return {str(k): float(v) for k, v in out.items()}

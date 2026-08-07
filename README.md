@@ -60,6 +60,7 @@ python -m nflsim team --team PHI        # one team: usage, stats, correlations
 python -m nflsim outliers               # top seasons + biggest movers vs last year
 python -m nflsim validate               # check the engine against reality
 python -m nflsim export --out out/      # CSV + parquet
+python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context comparisons
 ```
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
@@ -69,6 +70,13 @@ also exposes top-three positional equity, starter probability, and each
 player's simulated range of value above replacement. See
 [`docs/RESEARCH.md`](docs/RESEARCH.md) for the fantasy-tool research and design
 rationale.
+
+`factors` writes a self-contained HTML explorer plus CSV. The scenarios change
+the whole league, including teammates and opponents; they are system
+sensitivity estimates, not isolated player effects or causal claims. Use at
+least 5,000 simulations for decision-grade tail comparisons. The
+ongoing research and promotion gates are documented in
+[`docs/RESEARCH_LOOP.md`](docs/RESEARCH_LOOP.md).
 
 Scoring and league shape are flags, so any format is one argument away:
 

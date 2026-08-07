@@ -54,10 +54,33 @@ def actual_fantasy(season: int, scoring: Scoring) -> pd.DataFrame:
            + pw.sack_fumbles_lost.fillna(0)) * s.fumble_lost
     )
     out = pw.assign(fp=fp).groupby("player_id").agg(
-        actual=("fp", "sum"), games=("week", "nunique"),
+        actual=("fp", "sum"), stat_weeks=("week", "nunique"),
         pos=("position", "last"), name=("player_display_name", "last"),
     )
-    return out.reset_index().rename(columns={"player_id": "gsis_id"})
+    out = out.reset_index().rename(columns={"player_id": "gsis_id"})
+    try:
+        snap_games = _actual_games_from_snaps(
+            data.snap_counts([season]), data.rosters(season),
+        )
+        out = out.merge(snap_games, on="gsis_id", how="left")
+        out["games"] = out.games.fillna(out.stat_weeks)
+    except Exception:
+        # Older feeds can lack the ID bridge. Stat weeks are a conservative
+        # fallback, but callers can see the provenance in `stat_weeks`.
+        out["games"] = out.stat_weeks
+    return out
+
+
+def _actual_games_from_snaps(snaps: pd.DataFrame, roster: pd.DataFrame) -> pd.DataFrame:
+    """Count true offensive appearances, including active zero-touch games."""
+    bridge = (roster[["pfr_id", "gsis_id"]].dropna()
+              .drop_duplicates("pfr_id").set_index("pfr_id").gsis_id)
+    active = snaps[snaps.offense_snaps.fillna(0) > 0].copy()
+    active["gsis_id"] = active.pfr_player_id.map(bridge)
+    active = active.dropna(subset=["gsis_id"])
+    key = "game_id" if "game_id" in active else "week"
+    return (active.groupby("gsis_id")[key].nunique().rename("games")
+            .reset_index())
 
 
 def run_backtest(season: int, n_sims: int, scoring: Scoring, seed: int = 11,
@@ -85,9 +108,14 @@ def run_backtest(season: int, n_sims: int, scoring: Scoring, seed: int = 11,
     proj["gsis_id"] = bundle.player_table.gsis_id.reindex(proj.index)
 
     act = actual_fantasy(season, scoring)
-    df = proj.merge(act[["gsis_id", "actual"]], on="gsis_id", how="left")
+    df = proj.merge(
+        act[["gsis_id", "actual", "games"]].rename(columns={"games": "actual_games"}),
+        on="gsis_id", how="left",
+    )
     df["actual"] = df.actual.fillna(0.0)
+    df["actual_games"] = df.actual_games.fillna(0.0)
     df["error"] = df.points - df.actual
+    df = add_error_decomposition(df)
 
     total_actual = act.actual.clip(lower=0).sum()
     covered = act[act.gsis_id.isin(set(df.gsis_id))].actual.clip(lower=0).sum()
@@ -95,6 +123,43 @@ def run_backtest(season: int, n_sims: int, scoring: Scoring, seed: int = 11,
     df.attrs["season"] = season
     df.attrs["n_sims"] = n_sims
     return df
+
+
+def add_error_decomposition(df: pd.DataFrame) -> pd.DataFrame:
+    """Split total-points error exactly into availability and scoring-rate parts.
+
+    This symmetric decomposition avoids an arbitrary choice of projected or
+    actual points per game as the multiplier.  The two components sum to the
+    original points error for every player (apart from floating-point noise).
+    """
+    out = df.copy()
+    gp = out.games.to_numpy(float)
+    ga = out.actual_games.to_numpy(float)
+    pp = np.divide(out.points, gp, out=np.zeros(len(out), dtype=float), where=gp > 0)
+    pa = np.divide(out.actual, ga, out=np.zeros(len(out), dtype=float), where=ga > 0)
+    out["projected_ppg"] = pp
+    out["actual_ppg"] = pa
+    out["health_error"] = (gp - ga) * (pp + pa) / 2.0
+    out["rate_error"] = (pp - pa) * (gp + ga) / 2.0
+    return out
+
+
+def score_error_decomposition(df: pd.DataFrame, top_n: int = 200) -> None:
+    """Show whether misses came from games played or points while active."""
+    board = df.nlargest(top_n, "points")
+    rows = []
+    for pos in ("QB", "RB", "WR", "TE"):
+        sub = board[board.pos == pos]
+        if sub.empty:
+            continue
+        rows.append((
+            pos, len(sub), sub.error.abs().mean(), sub.health_error.abs().mean(),
+            sub.rate_error.abs().mean(), sub.health_error.mean(), sub.rate_error.mean(),
+        ))
+    print("\nError anatomy  ·  symmetric games-played vs points-per-game decomposition")
+    print("  pos    n    MAE   |health|   |rate|   health bias   rate bias")
+    for pos, n, mae, ah, ar, bh, br in rows:
+        print(f"  {pos:<3} {n:4d} {mae:6.1f} {ah:10.1f} {ar:8.1f} {bh:+12.1f} {br:+10.1f}")
 
 
 def _spearman(a, b) -> float:

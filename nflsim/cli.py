@@ -143,6 +143,20 @@ def cmd_html(args):
     print(f"wrote {path}  ({path.stat().st_size/1e6:.1f} MB)")
 
 
+def cmd_factors(args):
+    """Replay controlled scenarios to attribute player outcomes to context."""
+    from .experiments import generate_html, run_factor_experiment
+    b = _load_bundle()
+    frame, meta = run_factor_experiment(
+        b, _scoring(args), n_sims=args.sims, seed=args.seed,
+    )
+    csv_path = Path(args.csv)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    frame.to_csv(csv_path, index=False)
+    html_path = generate_html(frame, meta, Path(args.out))
+    print(f"wrote {csv_path} and {html_path}")
+
+
 def cmd_outliers(args):
     """Top projected seasons, and where the model departs from last year."""
     from .outliers import report
@@ -248,7 +262,8 @@ def cmd_calibrate(args):
 
 def cmd_backtest(args):
     """Project a season that has already happened, and score the projection."""
-    from .backtest import run_backtest, score, score_matched
+    from .backtest import (run_backtest, score, score_error_decomposition,
+                           score_matched)
     sc = _scoring(args)
     df = run_backtest(args.season, n_sims=args.sims, scoring=sc, seed=args.seed)
     # Persist before scoring: the run costs minutes, and a formatting problem
@@ -259,6 +274,7 @@ def cmd_backtest(args):
         print(f"wrote {args.out}")
     score(df, sc, top_n=args.top)
     score_matched(df, sc)
+    score_error_decomposition(df, top_n=args.top)
 
 
 # --------------------------------------------------------------------------
@@ -310,6 +326,14 @@ def main(argv=None):
         "html", help="self-contained HTML report: players and week-by-week detail"))
     h.add_argument("--out", default="report.html")
     h.set_defaults(func=cmd_html)
+
+    fx = common(sub.add_parser(
+        "factors", help="controlled simulations: injury, role, scheme and team context"))
+    fx.add_argument("--sims", type=int, default=2000)
+    fx.add_argument("--seed", type=int, default=SimConfig.seed)
+    fx.add_argument("--out", default="factor-comparison.html")
+    fx.add_argument("--csv", default="factor-comparison.csv")
+    fx.set_defaults(func=cmd_factors)
 
     o = common(sub.add_parser(
         "outliers", help="top projected seasons and biggest movers vs last year"))
