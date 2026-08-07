@@ -164,11 +164,13 @@ def cmd_backtest(args):
     from .backtest import run_backtest, score
     sc = _scoring(args)
     df = run_backtest(args.season, n_sims=args.sims, scoring=sc, seed=args.seed)
-    score(df, sc, top_n=args.top)
+    # Persist before scoring: the run costs minutes, and a formatting problem
+    # in the report should not throw the results away.
     if args.out:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(args.out, index=False)
         print(f"wrote {args.out}")
+    score(df, sc, top_n=args.top)
 
 
 # --------------------------------------------------------------------------

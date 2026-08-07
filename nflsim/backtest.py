@@ -92,6 +92,40 @@ def run_backtest(season: int, n_sims: int, scoring: Scoring, seed: int = 11,
     return df
 
 
+def _spearman(a, b) -> float:
+    """Rank correlation without pulling in scipy.
+
+    pandas delegates method="spearman" to scipy, which is not a dependency
+    here. Ranking with argsort and taking the Pearson correlation of the ranks
+    is the same statistic; average ranks are used so ties do not bias it.
+    """
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if len(a) < 3:
+        return float("nan")
+
+    def rank(x):
+        order = np.argsort(x, kind="mergesort")
+        r = np.empty(len(x), dtype=float)
+        r[order] = np.arange(len(x), dtype=float)
+        # Average the ranks within each group of tied values.
+        sx = x[order]
+        i = 0
+        while i < len(sx):
+            j = i
+            while j + 1 < len(sx) and sx[j + 1] == sx[i]:
+                j += 1
+            if j > i:
+                r[order[i:j + 1]] = np.arange(i, j + 1).mean()
+            i = j + 1
+        return r
+
+    ra, rb = rank(a), rank(b)
+    if ra.std() == 0 or rb.std() == 0:
+        return float("nan")
+    return float(np.corrcoef(ra, rb)[0, 1])
+
+
 def score(df: pd.DataFrame, scoring: Scoring, top_n: int = 200) -> None:
     """Report accuracy overall, by position, and against a naive baseline."""
     con = Console() if _RICH else None
@@ -126,7 +160,7 @@ def score(df: pd.DataFrame, scoring: Scoring, top_n: int = 200) -> None:
         if len(sub) < 5:
             continue
         r = np.corrcoef(sub.points, sub.actual)[0, 1]
-        rho = sub.points.corr(sub.actual, method="spearman")
+        rho = _spearman(sub.points, sub.actual)
         mae = (sub.points - sub.actual).abs().mean()
         bias = (sub.points - sub.actual).mean()
         rows.append([label, len(sub), f"{r:.3f}", f"{rho:.3f}", f"{mae:.1f}", f"{bias:+.1f}"])
