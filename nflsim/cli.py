@@ -206,6 +206,45 @@ def cmd_validate(args):
     run_validation(_load_bundle(), _load_result(), _scoring(args))
 
 
+def cmd_calibrate(args):
+    """Fit conformal interval widening on one season, test it on another."""
+    from .backtest import run_backtest
+    from . import calibrate as cal_mod
+    sc = _scoring(args)
+
+    def frame(season, tag):
+        cache = ART / f"backtest_{season}.csv"
+        if cache.exists() and not args.refresh:
+            print(f"reusing cached {tag} backtest for {season}")
+            return pd.read_csv(cache)
+        df = run_backtest(season, n_sims=args.sims, scoring=sc, seed=args.seed)
+        ART.mkdir(exist_ok=True)
+        df.to_csv(cache, index=False)
+        return df
+
+    fit_df = frame(args.fit_season, "calibration")
+    cal = cal_mod.fit(fit_df, args.fit_season, cohort=args.cohort)
+    out = ART / "conformal.json"
+    cal.save(out)
+
+    test_df = frame(args.test_season, "evaluation")
+    cov = cal_mod.coverage(test_df, cal, cohort=args.cohort)
+    bypos = cal_mod.coverage_by_position(test_df, cal, cohort=args.cohort)
+
+    print(f"\nfitted on {args.fit_season}, evaluated on {args.test_season} "
+          f"(top {args.cohort} by projection)\n")
+    print("interval coverage")
+    for _, r in cov.iterrows():
+        print(f"  {r['band']:>4} band (nominal {r['nominal']*100:.0f}%): "
+              f"raw {r['raw']*100:5.1f}%  ->  calibrated {r['calibrated']*100:5.1f}%"
+              f"   mean width {r['raw_width']:.0f} -> {r['cal_width']:.0f}")
+    print("\n80% band by position")
+    for _, r in bypos.iterrows():
+        print(f"  {r['pos']:<3} n={int(r['n']):<4} raw {r['raw']*100:5.1f}%  ->  "
+              f"calibrated {r['calibrated']*100:5.1f}%   widening x{r['factor']:.2f}")
+    print(f"\nsaved {out}")
+
+
 def cmd_backtest(args):
     """Project a season that has already happened, and score the projection."""
     from .backtest import run_backtest, score, score_matched
@@ -293,6 +332,18 @@ def main(argv=None):
 
     v = common(sub.add_parser("validate", help="check the engine against reality"))
     v.set_defaults(func=cmd_validate)
+
+    cb = common(sub.add_parser(
+        "calibrate",
+        help="fit conformal interval widening on one season, test on another"))
+    cb.add_argument("--fit-season", type=int, default=TARGET_SEASON - 2)
+    cb.add_argument("--test-season", type=int, default=TARGET_SEASON - 1)
+    cb.add_argument("--sims", type=int, default=3000)
+    cb.add_argument("--seed", type=int, default=11)
+    cb.add_argument("--cohort", type=int, default=200)
+    cb.add_argument("--refresh", action="store_true",
+                    help="re-run backtests even if cached")
+    cb.set_defaults(func=cmd_calibrate)
 
     bt = common(sub.add_parser(
         "backtest", help="project a past season out-of-sample and score it"))
