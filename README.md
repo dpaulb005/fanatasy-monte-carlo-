@@ -62,6 +62,14 @@ python -m nflsim validate               # check the engine against reality
 python -m nflsim export --out out/      # CSV + parquet
 ```
 
+The HTML report includes a **draft decision lab**. Select two to four top-80
+players to compare the probability that each creates more value than the other
+after replacement level is recalculated inside the same simulated season. It
+also exposes top-three positional equity, starter probability, and each
+player's simulated range of value above replacement. See
+[`docs/RESEARCH.md`](docs/RESEARCH.md) for the fantasy-tool research and design
+rationale.
+
 Scoring and league shape are flags, so any format is one argument away:
 
 ```bash

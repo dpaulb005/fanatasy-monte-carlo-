@@ -7,6 +7,16 @@ and what to do next.
 
 Branch: `claude/nfl-monte-carlo-fantasy-73qqvf`.
 
+## 2026-08-07 dev continuation
+
+The `dev` branch adds joint-distribution draft metrics to the self-contained
+HTML report: positional top-one/top-three equity, starter probability,
+season-specific value-over-replacement ranges, and a two-to-four-player draft
+decision matrix. The matrix compares value above position-specific replacement
+inside the same simulation replication; it does not compare cross-position raw
+points. Tests live in `tests/test_report_html.py`, and the research/design notes
+are in `docs/RESEARCH.md`.
+
 ---
 
 ## Run it

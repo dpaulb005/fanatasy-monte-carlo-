@@ -138,7 +138,8 @@ def cmd_html(args):
     if "weekly_fp" not in res:
         print("note: this result file has no weekly capture - re-run `simulate` "
               "to get game-by-game detail", file=sys.stderr)
-    path = generate(b, res, _frame(b, res, args), _scoring(args), Path(args.out))
+    path = generate(b, res, _frame(b, res, args), _scoring(args), Path(args.out),
+                    league=_league(args))
     print(f"wrote {path}  ({path.stat().st_size/1e6:.1f} MB)")
 
 
