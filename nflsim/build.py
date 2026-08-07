@@ -403,6 +403,8 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             def_sack_oe=stq.def_sack_oe if stq else 0.0,
         )
 
+    _center_efficiency(team_models)
+
     ptab = pd.DataFrame(rows).set_index("gindex")
     rate, dur = _hazard_vectors(ptab, haz)
 
@@ -424,6 +426,45 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
         injury_rate=rate, injury_dur=dur, schedule=sched,
         coach_table=coach_tab, strength_table=stab, season=season,
     )
+
+
+def _center_efficiency(team_models: dict) -> None:
+    """Re-centre the per-player efficiency adjustments on zero.
+
+    `catch_oe` is a player's catch rate minus the league completion curve
+    evaluated at his *average* depth of target. That comparison is biased
+    upward, and not by a little: the completion curve is convex, so a receiver
+    throwing to a spread of depths centred on 11 yards completes more often
+    than the curve's value *at* 11 yards. Every average receiver therefore
+    scores positive, and the bias compounds into league-wide completion
+    percentage running several points hot.
+
+    Evaluating the curve's expectation over each player's own air-yards
+    distribution would be the exact fix; centring achieves the same thing for
+    the purpose these terms serve. The absolute level of completion is already
+    set by the curve itself -- these terms only need to say who is better than
+    average, and a quantity that is meant to be relative should have mean zero.
+    The centring is target-weighted, because it is the target-weighted average
+    that determines the league's completion percentage.
+    """
+    oes, weights, cpoes = [], [], []
+    for tm in team_models.values():
+        real = tm.target_share > 0.02
+        oes.append(tm.catch_oe[real])
+        weights.append(tm.target_share[real])
+        starters = tm.qb_slots[:1]
+        cpoes.append(tm.qb_cpoe[starters])
+    if not oes:
+        return
+    oe_all = np.concatenate(oes)
+    w_all = np.concatenate(weights)
+    cp_all = np.concatenate(cpoes)
+    oe_mean = float(np.average(oe_all, weights=w_all)) if w_all.sum() > 0 else 0.0
+    cp_mean = float(cp_all.mean()) if cp_all.size else 0.0
+
+    for tm in team_models.values():
+        tm.catch_oe -= oe_mean
+        tm.qb_cpoe -= cp_mean
 
 
 def _hazard_vectors(ptab: pd.DataFrame, haz: dict) -> tuple[np.ndarray, np.ndarray]:

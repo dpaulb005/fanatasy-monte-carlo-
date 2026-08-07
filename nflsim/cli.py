@@ -80,7 +80,9 @@ def cmd_simulate(args):
     # of megabytes and takes a noticeable time to land; without this, anything
     # reading the file mid-write gets a truncated archive rather than an
     # honest "not finished yet".
-    tmp = RESULT.with_suffix(".npz.part")
+    # The suffix must stay .npz: np.savez appends it when the name lacks it,
+    # which would write beside the path we then try to rename.
+    tmp = RESULT.with_suffix(".part.npz")
     np.savez(
         tmp, totals=res["totals"], games_played=res["games_played"],
         team_points=np.array(res["team_points"], dtype=object),
