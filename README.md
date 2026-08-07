@@ -72,6 +72,38 @@ locally after first download.
 | Draft picks & combine | `nflverse` draft_picks, combine | Rookie priors |
 | Betting lines | `nfldata` games.csv | **Sanity check only** — never an input |
 
+### Everything is a weighted sum over past seasons
+
+No estimate in this model comes from a single season. A year of NFL data is a
+small, noisy sample — one injury, one coordinator change, six weeks of bad game
+script — and projecting off it alone over-reacts to whatever happened most
+recently. But pooling many seasons with *equal* weight is also wrong, because the
+league genuinely drifts: kickers have gotten better, coaches have gotten more
+aggressive on fourth down, backfields have committee-ised.
+
+So every layer is an exponentially recency-weighted sum across several past
+seasons, with the half-life set by how fast that particular quantity actually
+moves:
+
+| Layer | Window | Half-life | Why |
+|---|---|---|---|
+| League physics | 2016–2025 | 4 seasons | Rules and efficiency drift over years, so keep a decade of signal but let the modern game lead |
+| Coaching | full career | 2.5 seasons | A staff's identity persists but evolves with personnel and the league |
+| Team strength | 3 seasons | 1.15 seasons | Rosters turn over hard; two-year-old form says little |
+| Player usage | 4 seasons | 1.1 seasons | Roles change on a one-year timescale |
+| Rank baselines | 6 seasons | 3 seasons | Needs to be stable — it's the fallback for thin history — but offence concentration drifts |
+| Rookie curves | 2006–2025 | 5 seasons | Only 32 first-rounders a year across four positions, so a large sample is required |
+
+Measurably, this matters. Weighted versus unweighted fits of the same decade:
+field goal accuracy from 55 yards comes out at 66.6% rather than 64.6%; the
+fourth-down go rate at 18.9% rather than 17.7%. Those are real changes in how the
+game is played, and an unweighted mean would project a league that no longer
+exists.
+
+Shrinkage uses the *effective* sample size — the sum of recency weights — rather
+than a raw count. Fourteen games two seasons ago is genuinely weaker evidence
+than fourteen games last year, and a raw game count cannot express that.
+
 ### The four model layers
 
 **1. League physics.** How a play resolves, league-wide: completion probability by air
@@ -94,10 +126,10 @@ weaker guide to a team that is substantially a different team.
 **4. Players.** The load-bearing idea: a player's *share* of his offence is not a property
 he carries between buildings. A receiver who commanded a quarter of the targets on a bad
 team does not command a quarter of them after signing somewhere with two better receivers
-already there. So history is converted into a role-independent usage weight, combined with
-a depth-chart baseline according to how much history actually backs it, and only then
-normalised into shares inside his 2026 offence. That single mechanism handles team
-changes, the draft and injuries consistently.
+already there. So four seasons of history are converted into a role-independent usage
+weight, combined with a depth-chart baseline according to how much history actually backs
+it, and only then normalised into shares inside his 2026 offence. That single mechanism
+handles team changes, the draft and injuries consistently.
 
 ### Rookies
 

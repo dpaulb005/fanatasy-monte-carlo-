@@ -59,6 +59,53 @@ def _smooth_rate(num: np.ndarray, den: np.ndarray, prior_rate: float, strength: 
     return (num + prior_rate * strength) / (den + strength)
 
 
+# Recency half-lives, in seasons. Every estimate in the model is a weighted sum
+# over several past seasons rather than a snapshot of the most recent one --
+# single-season samples are far too noisy to project from, and pooling seasons
+# with equal weight ignores real drift. The half-life is set by how fast the
+# quantity actually moves:
+#
+#   physics  slow    rule changes and league-wide efficiency drift over years
+#   coaching medium  a staff's philosophy evolves, but it is recognisably theirs
+#   team     fast    rosters turn over hard; two-year-old form says little
+#   usage    fast    roles change on a one-year timescale
+#
+HALFLIFE_PHYSICS = 4.0
+HALFLIFE_COACH = 2.5
+HALFLIFE_TEAM = 1.15
+HALFLIFE_USAGE = 1.1
+HALFLIFE_ROOKIE = 5.0
+HALFLIFE_BASELINE = 3.0
+
+
+def recency_weights(seasons, target: int, halflife: float) -> np.ndarray:
+    """Exponential decay by seasons elapsed. Weight 1.0 for the season just
+    played, halving every `halflife` seasons before it."""
+    s = np.asarray(seasons, dtype=float)
+    return 0.5 ** ((target - 1 - s) / halflife)
+
+
+def _wmean(x, w) -> float:
+    x = np.asarray(x, dtype=float)
+    w = np.asarray(w, dtype=float)
+    ok = np.isfinite(x) & np.isfinite(w)
+    if not ok.any() or w[ok].sum() <= 0:
+        return float("nan")
+    return float(np.average(x[ok], weights=w[ok]))
+
+
+def _wvar(x, w) -> float:
+    m = _wmean(x, w)
+    x = np.asarray(x, dtype=float)
+    w = np.asarray(w, dtype=float)
+    ok = np.isfinite(x) & np.isfinite(w)
+    return float(np.average((x[ok] - m) ** 2, weights=w[ok]))
+
+
+def _wcount(idx: np.ndarray, w: np.ndarray, minlength: int) -> np.ndarray:
+    return np.bincount(idx, weights=w, minlength=minlength).astype(float)
+
+
 @dataclass
 class LeaguePhysics:
     """How a play resolves, league-wide."""
@@ -155,68 +202,89 @@ class TeamStrength:
 # Layer 1: league physics
 # --------------------------------------------------------------------------
 
-def fit_league_physics(pbp: pd.DataFrame) -> LeaguePhysics:
+def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
+                       halflife: float = HALFLIFE_PHYSICS) -> LeaguePhysics:
+    """Fit the shared laws of a play as a recency-weighted sum over seasons.
+
+    Every rate here is estimated from several past seasons at once, weighted
+    toward the recent ones. Pooling a decade with equal weight would bake in a
+    league that no longer exists -- completion percentage, pass rate and field
+    goal range have all drifted materially -- while using one season alone
+    would be far too noisy to sample from. A four-season half-life keeps roughly
+    a decade of signal while letting the recent game dominate.
+    """
     p = pbp
     reg = p[(p.season_type == "REG")]
+    target = int(season if season is not None else reg.season.max() + 1)
+
+    def W(df: pd.DataFrame) -> np.ndarray:
+        return recency_weights(df.season.to_numpy(), target, halflife)
 
     # ---- Passing ---------------------------------------------------------
     passes = reg[(reg.pass_attempt == 1) & (reg.sack != 1) & reg.air_yards.notna()]
+    wp = W(passes)
     ay_idx = _binidx(passes.air_yards, AY_BINS)
     comp = passes.complete_pass.fillna(0).to_numpy(float)
     ints = passes.interception.fillna(0).to_numpy(float)
 
     n_ay = len(AY_BINS) - 1
-    den = np.bincount(ay_idx, minlength=n_ay).astype(float)
-    comp_by_ay = _smooth_rate(np.bincount(ay_idx, weights=comp, minlength=n_ay), den, comp.mean(), 200.0)
-    int_by_ay = _smooth_rate(np.bincount(ay_idx, weights=ints, minlength=n_ay), den, ints.mean(), 400.0)
+    den = _wcount(ay_idx, wp, n_ay)
+    comp_by_ay = _smooth_rate(_wcount(ay_idx, comp * wp, n_ay), den, _wmean(comp, wp), 200.0)
+    int_by_ay = _smooth_rate(_wcount(ay_idx, ints * wp, n_ay), den, _wmean(ints, wp), 400.0)
 
     completions = passes[passes.complete_pass == 1]
+    wc = W(completions)
     c_idx = _binidx(completions.air_yards, AY_BINS)
     yac = completions.yards_after_catch.fillna(0).clip(lower=0).to_numpy(float)
-    c_den = np.bincount(c_idx, minlength=n_ay).astype(float)
+    c_den = _wcount(c_idx, wc, n_ay)
     yac_mean_by_ay = _smooth_rate(
-        np.bincount(c_idx, weights=yac, minlength=n_ay), c_den, yac.mean(), 100.0
+        _wcount(c_idx, yac * wc, n_ay), c_den, _wmean(yac, wc), 100.0
     )
     # Gamma shape from the overall YAC distribution (method of moments).
-    yac_shape = float(max(0.35, yac.mean() ** 2 / max(yac.var(), 1e-6)))
+    yac_mu, yac_var = _wmean(yac, wc), _wvar(yac, wc)
+    yac_shape = float(max(0.35, yac_mu ** 2 / max(yac_var, 1e-6)))
 
     # Residual spread of air yards around a passer's average intent.
     ay_sd = float(passes.groupby("passer_player_id").air_yards.std().median())
 
     # ---- Rushing ---------------------------------------------------------
     rushes = reg[(reg.rush_attempt == 1) & (reg.qb_kneel != 1) & reg.yards_gained.notna()]
+    wr = W(rushes)
     ry = rushes.yards_gained.to_numpy(float)
     shift = 5.0
     shifted = np.clip(ry + shift, 0.05, None)
-    m, v = shifted.mean(), shifted.var()
+    m, v = _wmean(shifted, wr), _wvar(shifted, wr)
     rush_shape = float(m * m / v)
     rush_scale = float(v / m)
-    rush_stuff_rate = float((ry <= 0).mean())
+    rush_stuff_rate = _wmean((ry <= 0).astype(float), wr)
 
     # Goal-line rushing converts at a very different rate than the gamma implies.
     gl = rushes[rushes.yardline_100 <= 10]
+    wgl = W(gl)
     gl_idx = _binidx(gl.yardline_100, np.arange(0, 12, 1.0))
     gl_td = gl.rush_touchdown.fillna(0).to_numpy(float)
-    gl_den = np.bincount(gl_idx, minlength=11).astype(float)
+    gl_den = _wcount(gl_idx, wgl, 11)
     rush_td_boost = _smooth_rate(
-        np.bincount(gl_idx, weights=gl_td, minlength=11), gl_den, gl_td.mean(), 50.0
+        _wcount(gl_idx, gl_td * wgl, 11), gl_den, _wmean(gl_td, wgl), 50.0
     )
 
     dropbacks = reg[reg.qb_dropback == 1]
-    sack_rate = float(dropbacks.sack.fillna(0).mean())
+    sack_rate = _wmean(dropbacks.sack.fillna(0), W(dropbacks))
     sacks = reg[reg.sack == 1]
-    sack_yards_mean = float(-sacks.yards_gained.mean()) if len(sacks) else 6.5
-    sack_fumble_rate = float(sacks.fumble_lost.fillna(0).mean()) if len(sacks) else 0.03
-    rush_fumble_rate = float(rushes.fumble_lost.fillna(0).mean())
-    rec_fumble_rate = float(completions.fumble_lost.fillna(0).mean())
+    ws = W(sacks)
+    sack_yards_mean = float(-_wmean(sacks.yards_gained, ws)) if len(sacks) else 6.5
+    sack_fumble_rate = _wmean(sacks.fumble_lost.fillna(0), ws) if len(sacks) else 0.03
+    rush_fumble_rate = _wmean(rushes.fumble_lost.fillna(0), wr)
+    rec_fumble_rate = _wmean(completions.fumble_lost.fillna(0), wc)
 
     # ---- Kicking ---------------------------------------------------------
     fgs = reg[(reg.field_goal_attempt == 1) & reg.kick_distance.notna()]
+    wf = W(fgs)
     dist = fgs.kick_distance.clip(15, 70).to_numpy(int)
     made = (fgs.field_goal_result == "made").to_numpy(float)
     fg_by_distance = np.zeros(75)
-    d_den = np.bincount(dist, weights=None, minlength=75).astype(float)
-    d_num = np.bincount(dist, weights=made, minlength=75).astype(float)
+    d_den = _wcount(dist, wf, 75)
+    d_num = _wcount(dist, made * wf, 75)
     # Smooth across neighbouring distances, then enforce monotone decline.
     kern = np.array([0.05, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05])
     d_den_s = np.convolve(d_den, kern, mode="same")
@@ -231,13 +299,15 @@ def fit_league_physics(pbp: pd.DataFrame) -> LeaguePhysics:
     fg_by_distance = np.minimum.accumulate(fg_by_distance)
 
     xps = reg[reg.extra_point_attempt == 1]
-    xp_rate = float((xps.extra_point_result == "good").mean()) if len(xps) else 0.945
+    xp_rate = _wmean((xps.extra_point_result == "good").astype(float), W(xps)) if len(xps) else 0.945
     twos = reg[reg.two_point_attempt == 1]
-    two_pt_rate = float((twos.two_point_conv_result == "success").mean()) if len(twos) else 0.48
+    two_pt_rate = _wmean((twos.two_point_conv_result == "success").astype(float),
+                         W(twos)) if len(twos) else 0.48
 
     punts = reg[reg.punt_attempt == 1]
-    punt_net_mean = float(punts.kick_distance.mean()) if len(punts) else 45.0
-    punt_net_sd = float(punts.kick_distance.std()) if len(punts) else 9.0
+    wpu = W(punts)
+    punt_net_mean = _wmean(punts.kick_distance, wpu) if len(punts) else 45.0
+    punt_net_sd = float(np.sqrt(_wvar(punts.kick_distance, wpu))) if len(punts) else 9.0
     touchback_rate = 0.12
 
     # ---- Clock -----------------------------------------------------------
@@ -248,12 +318,17 @@ def fit_league_physics(pbp: pd.DataFrame) -> LeaguePhysics:
     allp["elapsed"] = -allp.groupby("game_id").game_seconds_remaining.diff().shift(-1)
     scr = allp[allp.play_type.isin(["run", "pass"])]
     ok = scr[(scr.elapsed > 0) & (scr.elapsed < 60)]
-    sec_run = float(ok[ok.play_type == "run"].elapsed.mean())
-    sec_pass_complete = float(ok[(ok.play_type == "pass") & (ok.complete_pass == 1)].elapsed.mean())
-    sec_pass_incomplete = float(ok[(ok.play_type == "pass") & (ok.complete_pass != 1)].elapsed.mean())
+    wk = W(ok)
+    is_run = (ok.play_type == "run").to_numpy()
+    is_cmp = ((ok.play_type == "pass") & (ok.complete_pass == 1)).to_numpy()
+    is_inc = ((ok.play_type == "pass") & (ok.complete_pass != 1)).to_numpy()
+    el = ok.elapsed.to_numpy(float)
+    sec_run = _wmean(el[is_run], wk[is_run])
+    sec_pass_complete = _wmean(el[is_cmp], wk[is_cmp])
+    sec_pass_incomplete = _wmean(el[is_inc], wk[is_inc])
     # Two-minute-drill compression.
-    hurry = ok[(ok.half_seconds_remaining < 120)]
-    sec_hurry = float(hurry.elapsed.mean()) if len(hurry) else 22.0
+    hm = (ok.half_seconds_remaining < 120).to_numpy()
+    sec_hurry = _wmean(el[hm], wk[hm]) if hm.any() else 22.0
 
     # ---- Situational pass rate grid --------------------------------------
     calls = reg[
@@ -262,27 +337,33 @@ def fit_league_physics(pbp: pd.DataFrame) -> LeaguePhysics:
         & (reg.qb_spike != 1)
         & reg.down.notna()
     ]
+    wcall = W(calls)
     xpass_grid = _rate_grid(
-        calls, (calls.play_type == "pass").to_numpy(float), prior=0.57, strength=60.0
+        calls, (calls.play_type == "pass").to_numpy(float), prior=0.57, strength=60.0,
+        weights=wcall,
     )
 
     # ---- Fourth down go rate --------------------------------------------
     fourth = reg[(reg.down == 4) & reg.play_type.notna()]
+    w4 = W(fourth)
     went = fourth.play_type.isin(["run", "pass"]).to_numpy(float)
     yl_i = _binidx(fourth.yardline_100, YL_BINS)
     tg_i = _binidx(fourth.ydstogo, TOGO_BINS)
     shape = (len(YL_BINS) - 1, len(TOGO_BINS) - 1)
     flat = yl_i * shape[1] + tg_i
-    den4 = np.bincount(flat, minlength=shape[0] * shape[1]).astype(float)
-    num4 = np.bincount(flat, weights=went, minlength=shape[0] * shape[1]).astype(float)
-    go_grid = _smooth_rate(num4, den4, float(went.mean()), 25.0).reshape(shape)
+    den4 = _wcount(flat, w4, shape[0] * shape[1])
+    num4 = _wcount(flat, went * w4, shape[0] * shape[1])
+    go_grid = _smooth_rate(num4, den4, _wmean(went, w4), 25.0).reshape(shape)
 
     off = reg[reg.epa.notna()]
-    league_epa_pass = float(off[off.pass_attempt == 1].epa.mean())
-    league_epa_rush = float(off[off.rush_attempt == 1].epa.mean())
-    plays_per_team_game = (
-        calls.groupby(["game_id", "posteam"]).size().mean()
-    )
+    op = off[off.pass_attempt == 1]
+    orr = off[off.rush_attempt == 1]
+    league_epa_pass = _wmean(op.epa, W(op))
+    league_epa_rush = _wmean(orr.epa, W(orr))
+    # Plays per team-game, weighted the same way, so pace drift is reflected.
+    ppg = calls.groupby(["game_id", "posteam"]).agg(n=("play_id", "size"),
+                                                    season=("season", "first"))
+    plays_per_team_game = _wmean(ppg.n, recency_weights(ppg.season, target, halflife))
 
     return LeaguePhysics(
         comp_by_ay=comp_by_ay,
@@ -331,14 +412,16 @@ def _grid_index(down, togo, score_diff, secs) -> np.ndarray:
     return ((d * GRID_SHAPE[1] + t) * GRID_SHAPE[2] + s) * GRID_SHAPE[3] + c
 
 
-def _rate_grid(df: pd.DataFrame, y: np.ndarray, prior: float, strength: float) -> np.ndarray:
+def _rate_grid(df: pd.DataFrame, y: np.ndarray, prior: float, strength: float,
+               weights: np.ndarray | None = None) -> np.ndarray:
     flat = _grid_index(
         df.down.to_numpy(), df.ydstogo.to_numpy(),
         df.score_differential.fillna(0).to_numpy(), df.game_seconds_remaining.fillna(1800).to_numpy(),
     )
     size = int(np.prod(GRID_SHAPE))
-    den = np.bincount(flat, minlength=size).astype(float)
-    num = np.bincount(flat, weights=y, minlength=size).astype(float)
+    w = np.ones(len(df)) if weights is None else np.asarray(weights, dtype=float)
+    den = np.bincount(flat, weights=w, minlength=size).astype(float)
+    num = np.bincount(flat, weights=y * w, minlength=size).astype(float)
     return _smooth_rate(num, den, prior, strength).reshape(GRID_SHAPE)
 
 
@@ -356,9 +439,21 @@ def _attach_coaches(pbp: pd.DataFrame, games: pd.DataFrame) -> pd.DataFrame:
     return m
 
 
-def fit_coaches(pbp: pd.DataFrame, games: pd.DataFrame, physics: LeaguePhysics) -> dict[str, CoachProfile]:
+def fit_coaches(pbp: pd.DataFrame, games: pd.DataFrame, physics: LeaguePhysics,
+                season: int | None = None,
+                halflife: float = HALFLIFE_COACH) -> dict[str, CoachProfile]:
+    """Estimate each staff's tendencies as a recency-weighted sum over its seasons.
+
+    A coach's identity is real and persistent -- which is why it is worth
+    modelling separately from the team -- but it is not fixed. Play-callers
+    adapt to personnel and to the league, so a season from six years ago is
+    weak evidence about this year's tendencies while still being evidence.
+    Weighting rather than truncating keeps long-tenured coaches well estimated
+    without letting their early years dominate.
+    """
     m = _attach_coaches(pbp, games)
     reg = m[(m.season_type == "REG") & m.off_coach.notna()]
+    target = int(season if season is not None else reg.season.max() + 1)
 
     calls = reg[
         reg.play_type.isin(["run", "pass"])
@@ -377,6 +472,7 @@ def fit_coaches(pbp: pd.DataFrame, games: pd.DataFrame, physics: LeaguePhysics) 
     xp = physics.xpass_grid.reshape(-1)[flat]
     calls["is_pass"] = (calls.play_type == "pass").astype(float)
     calls["pass_oe_own"] = calls.is_pass - xp
+    calls["w"] = recency_weights(calls.season.to_numpy(), target, halflife)
 
     # Neutral-script pace: exclude two-minute and blowout situations, where
     # pace is dictated by the scoreboard rather than by preference.
@@ -398,31 +494,38 @@ def fit_coaches(pbp: pd.DataFrame, games: pd.DataFrame, physics: LeaguePhysics) 
     tg_i = _binidx(fourth.ydstogo, TOGO_BINS)
     fourth["go_x"] = physics.go_grid[yl_i, tg_i]
     fourth["go_oe"] = fourth.went - fourth.go_x
+    fourth["w"] = recency_weights(fourth.season.to_numpy(), target, halflife)
 
     rz = calls[calls.yardline_100 <= 20]
 
     profiles: dict[str, CoachProfile] = {}
-    league_pace = float(pace_ok.elapsed.mean())
+    league_pace = _wmean(pace_ok.elapsed, pace_ok.w)
 
     for coach, grp in calls.groupby("off_coach"):
         n = len(grp)
         if n < 200:
             continue
-        # Shrink every tendency toward league average by sample size.
+        # Shrink every tendency toward league average by *effective* sample
+        # size -- the sum of recency weights, not the raw play count, so a
+        # coach whose volume is mostly old is estimated less confidently.
+        wsum = float(grp.w.sum())
         k_proe = 1500.0
-        proe = float(grp.pass_oe_own.sum() / (n + k_proe))
+        proe = float((grp.pass_oe_own * grp.w).sum() / (wsum + k_proe))
 
         pg = pace_ok[pace_ok.off_coach == coach]
-        if len(pg) > 100:
-            pace = float((pg.elapsed.sum() + league_pace * 800.0) / (len(pg) + 800.0))
+        pw = float(pg.w.sum()) if len(pg) else 0.0
+        if pw > 100:
+            pace = float(((pg.elapsed * pg.w).sum() + league_pace * 800.0) / (pw + 800.0))
         else:
             pace = league_pace
 
         fg = fourth[fourth.off_coach == coach]
-        go_oe = float(fg.go_oe.sum() / (len(fg) + 120.0)) if len(fg) else 0.0
+        fw = float(fg.w.sum()) if len(fg) else 0.0
+        go_oe = float((fg.go_oe * fg.w).sum() / (fw + 120.0)) if fw else 0.0
 
         rg = rz[rz.off_coach == coach]
-        rz_oe = float(rg.pass_oe_own.sum() / (len(rg) + 400.0)) if len(rg) else 0.0
+        rw = float(rg.w.sum()) if len(rg) else 0.0
+        rz_oe = float((rg.pass_oe_own * rg.w).sum() / (rw + 400.0)) if rw else 0.0
 
         profiles[coach] = CoachProfile(
             coach=coach,
@@ -432,9 +535,9 @@ def fit_coaches(pbp: pd.DataFrame, games: pd.DataFrame, physics: LeaguePhysics) 
             sec_per_play=pace,
             go_rate_oe=go_oe,
             rz_pass_oe=rz_oe,
-            pass_rush_split_rz=float(rg.is_pass.mean()) if len(rg) else 0.55,
-            shotgun_rate=float(grp.shotgun.fillna(0).mean()),
-            no_huddle_rate=float(grp.no_huddle.fillna(0).mean()),
+            pass_rush_split_rz=_wmean(rg.is_pass, rg.w) if rw else 0.55,
+            shotgun_rate=_wmean(grp.shotgun.fillna(0), grp.w),
+            no_huddle_rate=_wmean(grp.no_huddle.fillna(0), grp.w),
         )
 
     # A neutral profile for coaches with no NFL play-calling history.
@@ -485,7 +588,7 @@ def fit_team_strength(
     lookback: int = 3,
 ) -> dict[str, TeamStrength]:
     reg = pbp[(pbp.season_type == "REG") & (pbp.season >= season - lookback)].copy()
-    reg["w"] = 0.5 ** ((season - reg.season) / 1.15)
+    reg["w"] = recency_weights(reg.season.to_numpy(), season, HALFLIFE_TEAM)
 
     coach_map = coaches_for_season(games, season)
     prev_coach = coaches_for_season(games, season - 1)

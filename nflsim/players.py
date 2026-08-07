@@ -113,16 +113,31 @@ def current_depth(season: int) -> pd.DataFrame:
 # --------------------------------------------------------------------------
 
 def _recency_weights(seasons: pd.Series, target: int, halflife: float = 1.1) -> pd.Series:
-    return 0.5 ** ((target - seasons) / halflife)
+    """Exponential decay by seasons elapsed; the season just played weighs 1.0."""
+    return 0.5 ** ((target - 1 - seasons) / halflife)
 
 
-def fit_usage(season: int, lookback: int = 3) -> pd.DataFrame:
-    """Per-player usage and efficiency, from recent weekly stat lines."""
+def fit_usage(season: int, lookback: int = 4,
+              halflife: float = 1.1) -> pd.DataFrame:
+    """Per-player usage and efficiency as a recency-weighted sum over seasons.
+
+    Four seasons rather than one. A single year of target share is a noisy
+    estimate of a player's role -- injuries, a quarterback change, six weeks in
+    a bad scheme -- and projecting off it alone over-reacts to whatever happened
+    most recently. Weighting back through four seasons at a ~1.1 season
+    half-life keeps last year dominant while letting an established track record
+    stabilise the estimate, and gives players who missed most of a season a
+    prior built from when they were actually playing.
+
+    The returned `eff_games` is the recency-weighted game count, which is what
+    downstream shrinkage should use: fourteen games two seasons ago is genuinely
+    weaker evidence than fourteen games last year, and a raw count cannot say so.
+    """
     yrs = list(range(season - lookback, season))
     pw = data.player_week(yrs)
     pw = pw[(pw.season_type == "REG") & pw.position.isin(FANTASY_POSITIONS)].copy()
 
-    pw["w"] = _recency_weights(pw.season, season)
+    pw["w"] = _recency_weights(pw.season, season, halflife)
 
     # Team weekly totals, so shares are computed against the offence the player
     # actually played in rather than a league average.
@@ -173,6 +188,9 @@ def fit_usage(season: int, lookback: int = 3) -> pd.DataFrame:
         "pos": info.pos.values,
         "last_team": info.last_team.values,
         "n_games": info.n_games.values,
+        "n_seasons": info.seasons.values,
+        # Effective sample size: games discounted by how long ago they were.
+        "eff_games": wt.reindex(info.index).values,
         "wt": wt.reindex(info.index).values,
         "targets": tgt.reindex(info.index).values,
         "receptions": rec.reindex(info.index).values,
@@ -223,12 +241,19 @@ def goalline_shares(season: int, lookback: int = 3) -> pd.DataFrame:
 # Rookies: draft capital + athletic profile, calibrated on 1999-2025 outcomes
 # --------------------------------------------------------------------------
 
-def fit_rookie_curves(season: int) -> dict[str, dict]:
+def fit_rookie_curves(season: int, halflife: float = 5.0) -> dict[str, dict]:
     """What a given draft slot has historically produced in year one.
 
-    For every drafted skill player since 1999 we look up his actual rookie-year
+    For every drafted skill player since 2006 we look up his actual rookie-year
     usage share, then fit a smooth decay of expected share against draft pick.
-    Undrafted players anchor the tail.
+
+    The draft classes are recency-weighted with a long half-life. Two decades of
+    classes are needed for the curve to be stable at all -- there are only
+    thirty-two first-round picks a year, spread over four positions -- but how
+    quickly rookies are given real roles has changed a lot over that span, and
+    an unweighted mean would project the usage of a 2010 rookie onto a 2026 one.
+    A five-season half-life keeps the sample large while letting the modern era
+    lead.
     """
     picks = data.draft_picks()
     picks = picks[picks.position.isin(FANTASY_POSITIONS) & (picks.season < season)]
@@ -267,6 +292,9 @@ def fit_rookie_curves(season: int) -> dict[str, dict]:
                            "rush": np.zeros_like(grid, dtype=float)}
             continue
         pick = sub.pick.to_numpy(float)
+        # Recency weight per draft class, applied inside the kernel smoother so
+        # recent classes dominate the fitted curve without being alone in it.
+        rw = _recency_weights(sub.season, season, halflife).to_numpy(float)
         out = {}
         for key, col in (("target", "target_share"), ("rush", "rush_share")):
             y = sub[col].to_numpy(float)
@@ -274,7 +302,7 @@ def fit_rookie_curves(season: int) -> dict[str, dict]:
             lp = np.log(np.clip(pick, 1, None))
             lg = np.log(grid)
             bw = 0.45
-            wmat = np.exp(-0.5 * ((lg[:, None] - lp[None, :]) / bw) ** 2)
+            wmat = np.exp(-0.5 * ((lg[:, None] - lp[None, :]) / bw) ** 2) * rw[None, :]
             out[key] = (wmat @ y) / np.maximum(wmat.sum(axis=1), 1e-9)
         curves[pos] = out
     curves["_grid"] = grid

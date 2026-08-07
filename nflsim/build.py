@@ -64,13 +64,20 @@ class Bundle:
 # Empirical baselines by depth-chart rank
 # --------------------------------------------------------------------------
 
-def fit_rank_baselines(season: int, lookback: int = 6) -> dict[tuple[str, int], dict]:
+def fit_rank_baselines(season: int, lookback: int = 6,
+                       halflife: float = priors.HALFLIFE_BASELINE) -> dict[tuple[str, int], dict]:
     """Typical share of an offence commanded by the Nth man at a position.
 
     Derived by ranking each historical team's players by realised share and
     averaging across team-seasons, so it is free of depth-chart schema drift
     and reflects how touches are actually distributed rather than how a team
     listed its roster in August.
+
+    Averaged over six past seasons with recency weighting rather than a single
+    year: these baselines are what a player with little history falls back on,
+    so they need to be stable, but how concentrated NFL offences are does drift
+    (backfields have committee-ised, target trees have narrowed) and a flat
+    six-year mean would lag that.
     """
     yrs = list(range(season - lookback, season))
     pw = data.player_week(yrs)
@@ -85,6 +92,7 @@ def fit_rank_baselines(season: int, lookback: int = 6) -> dict[tuple[str, int], 
     agg = agg.merge(team_tot, on=["season", "team"])
     agg["tshare"] = agg.targets / agg.tt.replace(0, np.nan)
     agg["rshare"] = agg.carries / agg.tc.replace(0, np.nan)
+    agg["w"] = priors.recency_weights(agg.season.to_numpy(), season, halflife)
 
     out: dict[tuple[str, int], dict] = {}
     for pos in FANTASY_POSITIONS:
@@ -94,8 +102,8 @@ def fit_rank_baselines(season: int, lookback: int = 6) -> dict[tuple[str, int], 
         for r in range(1, SLOTS[pos] + 1):
             s = sub[sub["rank"] == r]
             out[(pos, r)] = {
-                "tshare": float(s.tshare.mean()) if len(s) else 0.01,
-                "rshare": float(s.rshare.mean()) if len(s) else 0.01,
+                "tshare": priors._wmean(s.tshare, s.w) if len(s) else 0.01,
+                "rshare": priors._wmean(s.rshare, s.w) if len(s) else 0.01,
             }
     return out
 
@@ -166,10 +174,10 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     games = data.games()
 
     log("fitting league physics ...")
-    physics = priors.fit_league_physics(pbp)
+    physics = priors.fit_league_physics(pbp, season)
 
     log("fitting coaching profiles ...")
-    coach_profiles = priors.fit_coaches(pbp, games, physics)
+    coach_profiles = priors.fit_coaches(pbp, games, physics, season)
     coach_map = priors.coaches_for_season(games, season)
     league_pace = coach_profiles["__LEAGUE__"].sec_per_play
 
@@ -253,8 +261,10 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             )
 
             # Confidence in a player's own history, saturating around a full
-            # season and a half of games.
-            ngames = float(hist.n_games) if isinstance(hist, pd.Series) else 0.0
+            # season and a half. This uses the *recency-weighted* game count,
+            # not the raw one: a player whose volume is all from three seasons
+            # ago should not be trusted as though he played it last year.
+            ngames = float(hist.eff_games) if isinstance(hist, pd.Series) else 0.0
             conf = float(np.clip(ngames / (ngames + 14.0), 0.0, 0.85))
 
             if is_rookie:
@@ -432,20 +442,28 @@ def _age(birth) -> float:
     return float((pd.Timestamp(f"{TARGET_SEASON}-09-01") - b).days / 365.25)
 
 
-def _qb_rush_rates(season: int, lookback: int = 3) -> dict[str, float]:
-    """Share of a team's designed runs and scrambles that the quarterback keeps."""
+def _qb_rush_rates(season: int, lookback: int = 4,
+                   halflife: float = priors.HALFLIFE_USAGE) -> dict[str, float]:
+    """Share of a team's designed runs and scrambles that the quarterback keeps.
+
+    Weighted across four past seasons. Quarterback rushing is one of the more
+    stable traits a passer has, and it is worth a great deal in fantasy scoring,
+    so it is better estimated from a multi-season weighted sum than from
+    whatever last year's game scripts happened to produce.
+    """
     pbp = data.play_by_play(
         range(season - lookback, season),
         columns=["season", "season_type", "posteam", "rush_attempt", "qb_kneel",
                  "rusher_player_id", "qb_scramble"],
     )
-    p = pbp[(pbp.season_type == "REG") & (pbp.rush_attempt == 1) & (pbp.qb_kneel != 1)]
-    team_tot = p.groupby("posteam").size()
-    by_qb = p.groupby("rusher_player_id").size()
+    p = pbp[(pbp.season_type == "REG") & (pbp.rush_attempt == 1) & (pbp.qb_kneel != 1)].copy()
+    p["w"] = priors.recency_weights(p.season.to_numpy(), season, halflife)
+    team_tot = p.groupby("posteam").w.sum()
+    by_qb = p.groupby("rusher_player_id").w.sum()
     last_team = p.groupby("rusher_player_id").posteam.last()
     out = {}
-    for pid, cnt in by_qb.items():
+    for pid, wsum in by_qb.items():
         t = last_team.get(pid)
         if t and team_tot.get(t, 0) > 0:
-            out[pid] = float(np.clip(cnt / team_tot[t], 0.0, 0.45))
+            out[pid] = float(np.clip(wsum / team_tot[t], 0.0, 0.45))
     return out
