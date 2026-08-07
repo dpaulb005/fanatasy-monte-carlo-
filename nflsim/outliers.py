@@ -65,6 +65,14 @@ def build_table(df: pd.DataFrame, bundle, scoring: Scoring) -> pd.DataFrame:
                           "prior_pos_rank"]], on="gsis_id", how="left")
     m["prior_pts"] = m.prior_pts.fillna(0.0)
     m["delta"] = m.points - m.prior_pts
+    # Season totals confound role with availability. A projection is a mean over
+    # simulated seasons that include the games a player misses; last year's
+    # actual is one realisation from a player who may have played all seventeen.
+    # Comparing the two makes every healthy player look like a decline. Points
+    # per game removes the confound and is what actually says whether the model
+    # thinks his role changed.
+    m["prior_ppg"] = np.where(m.prior_games > 0, m.prior_pts / m.prior_games, np.nan)
+    m["ppg_delta"] = m.ppg - m.prior_ppg
     m["rank_delta"] = m.prior_pos_rank - m.pos_rank      # positive = improving
     m["moved"] = (m.prior_team.notna()) & (m.prior_team != m.team)
     return m
@@ -93,18 +101,29 @@ def _row(r, prior_label: str):
     rk = "-" if not np.isfinite(r.prior_pos_rank) else f"{r.pos}{int(r.prior_pos_rank)}"
     move = f"  [grey42]{r.prior_team}→{r.team}[/]" if r.moved and _RICH else (
         f"  {r.prior_team}->{r.team}" if r.moved else "")
+    ppg_d = "-" if not np.isfinite(r.ppg_delta) else f"{r.ppg_delta:+.1f}"
+    prior_ppg = "-" if not np.isfinite(r.prior_ppg) else f"{r.prior_ppg:.1f}"
     return [
         f"{r.player}{move}", r.pos, r.team,
         _fmt(r.points, 0), _fmt(r.p10, 0), _fmt(r.p90, 0),
-        f"{r.pos}{int(r.pos_rank)}", rk, was,
-        f"{r.delta:+,.0f}",
+        f"{r.pos}{int(r.pos_rank)}", rk, was, f"{r.delta:+,.0f}",
+        prior_ppg, _fmt(r.ppg, 1), ppg_d,
     ]
 
 
 COLS = [("Player", "left"), ("Pos", "center"), ("Tm", "center"),
         ("Proj", "right"), ("Floor", "right"), ("Ceil", "right"),
         ("Rank", "center"), ("Was", "center"), ("Last yr", "right"),
-        ("Δ pts", "right")]
+        ("Δ pts", "right"),
+        ("PPG was", "right"), ("PPG proj", "right"), ("Δ PPG", "right")]
+
+
+# A player is worth comparing against his past only if he is rosterable in one
+# direction or the other. Without this the movement lists fill with backup
+# quarterbacks: a passer who started eight games has a real per-game rate and
+# now projects near zero behind a starter, which swamps every genuine outlier.
+# That he lost the job is a fact you already have, not something the model found.
+RELEVANT_RANK = {"QB": 26, "RB": 50, "WR": 60, "TE": 26}
 
 
 def report(df: pd.DataFrame, bundle, scoring: Scoring, top: int = 25,
@@ -130,15 +149,19 @@ def report(df: pd.DataFrame, bundle, scoring: Scoring, top: int = 25,
     # Restrict to players who actually had a season to compare against, so the
     # list is genuine disagreement rather than an artefact of missing data.
     cmp = m[(m.prior_games >= min_prior_games) & (~m.rookie)]
-
-    risers = cmp.nlargest(n_outliers, "delta")
+    cmp = cmp[cmp.ppg_delta.notna()]
+    cutoff = cmp.pos.map(RELEVANT_RANK).fillna(50)
+    cmp = cmp[(cmp.pos_rank <= cutoff) & (cmp.prior_pos_rank <= cutoff * 2)]
+    risers = cmp.nlargest(n_outliers, "ppg_delta")
     _table(con, f"Biggest projected RISERS vs {prev}", COLS,
            [_row(r, str(prev)) for _, r in risers.iterrows()],
-           note="These are the model's convictions. They are also where it is "
-                "most exposed: a projection that disagrees with a full season of "
-                "evidence is either an edge or an error.")
+           note="Ranked by change in points PER GAME, not season total: a season "
+                "total mixes a change in role with a change in how many games the "
+                "player is expected to be available for. These are the model's "
+                "convictions, and equally where it is most exposed -- a projection "
+                "that disagrees with a full season of evidence is an edge or an error.")
 
-    fallers = cmp.nsmallest(n_outliers, "delta")
+    fallers = cmp.nsmallest(n_outliers, "ppg_delta")
     _table(con, f"Biggest projected FALLERS vs {prev}", COLS,
            [_row(r, str(prev)) for _, r in fallers.iterrows()],
            note="Common causes, in rough order: a lost role on the depth chart, "

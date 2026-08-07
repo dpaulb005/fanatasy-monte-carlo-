@@ -26,7 +26,7 @@ TIER_STYLE = ["bold white", "bright_white", "white", "grey70", "grey58", "grey42
 # drops columns silently when it runs out of room -- the player names were the
 # first thing to disappear. Ask for the width the table actually needs, while
 # still using a wider terminal when there is one.
-MIN_WIDTH = 132
+MIN_WIDTH = 156
 
 
 def _console():

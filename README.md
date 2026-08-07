@@ -42,6 +42,8 @@ python -m nflsim simulate --sims 10000  # run 10,000 seasons (~7 min)
 python -m nflsim board --top 80         # the draft board
 python -m nflsim projections --pos WR   # per-position stat projections
 python -m nflsim teams                  # team wins, scoring, coaching profiles
+python -m nflsim team --team PHI        # one team: usage, stats, correlations
+python -m nflsim outliers               # top seasons + biggest movers vs last year
 python -m nflsim validate               # check the engine against reality
 python -m nflsim export --out out/      # CSV + parquet
 ```
