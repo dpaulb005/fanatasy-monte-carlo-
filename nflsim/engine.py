@@ -208,12 +208,13 @@ class GameSimulator:
             def base(v):
                 return v if role is None else v[None, :] * role
 
-            tsh = _effective_shares(base(tm.target_share), av, tm.redistribute)
-            rzsh = _effective_shares(base(tm.rz_target_share), av, tm.redistribute)
             def gbase(v):
+                # Scoring-rate shock rides on red zone and goal-line usage.
                 b = base(v)
                 return b if glf is None else (b if b.ndim == 2 else b[None, :]) * glf
 
+            tsh = _effective_shares(base(tm.target_share), av, tm.redistribute)
+            rzsh = _effective_shares(gbase(tm.rz_target_share), av, tm.redistribute)
             glsh = _effective_shares(gbase(tm.gl_target_share), av, tm.redistribute)
             rsh = _effective_shares(base(tm.rush_share), av, tm.redistribute)
             gsh = _effective_shares(gbase(tm.gl_share), av, tm.redistribute)
