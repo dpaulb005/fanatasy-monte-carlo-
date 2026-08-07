@@ -244,6 +244,79 @@ def fit_usage(season: int, lookback: int = 4,
     return out.reset_index()
 
 
+def team_weight_fractions(season: int, lookback: int = 4,
+                          halflife: float = 1.1) -> pd.DataFrame:
+    """What share of each player's weighted history was earned on which team.
+
+    A usage share is a statement about an opportunity structure, not a property
+    the player carries in his kit bag. When he changes buildings the structure
+    is gone, so his own history becomes weaker evidence about his new role --
+    and the model needs to know how much of that history is even about the team
+    it is now projecting him on.
+    """
+    pw = data.player_week(range(season - lookback, season))
+    pw = pw[(pw.season_type == "REG") & pw.position.isin(FANTASY_POSITIONS)].copy()
+    pw["w"] = _recency_weights(pw.season, season, halflife)
+    by = pw.groupby(["player_id", "team"], as_index=False).w.sum()
+    tot = by.groupby("player_id").w.sum().rename("tot")
+    by = by.merge(tot, on="player_id")
+    by["frac"] = by.w / by.tot.replace(0, np.nan)
+    return by.rename(columns={"player_id": "gsis_id"})[["gsis_id", "team", "frac"]]
+
+
+def fit_team_change_penalty(season: int, lookback: int = 10,
+                            min_games: int = 8) -> dict[str, float]:
+    """How much less a player's usage history is worth after he changes teams.
+
+    Measured, not assumed. Regress log usage share on the prior season's,
+    separately for players who stayed put and players who moved, and compare
+    the residual spread. Information scales as the inverse of variance, so the
+    ratio of squared residuals is the relative weight the moved player's
+    history deserves.
+
+    It is a large effect -- a receiver's prior share carries only about 58% of
+    its usual information after a move -- and ignoring it is what lets a back
+    import a workload he earned somewhere else into a depth chart where he sits
+    second.
+    """
+    pw = data.player_week(range(season - lookback, season))
+    pw = pw[(pw.season_type == "REG") & pw.position.isin(("RB", "WR", "TE"))]
+    tt = pw.groupby(["season", "team"]).agg(tt=("targets", "sum"),
+                                            tc=("carries", "sum")).reset_index()
+    ag = pw.groupby(["season", "player_id", "position"], as_index=False).agg(
+        tg=("targets", "sum"), ca=("carries", "sum"), g=("week", "nunique"),
+        team=("team", lambda s: s.value_counts().index[0]))
+    ag = ag.merge(tt, on=["season", "team"])
+    ag["tsh"] = ag.tg / ag.tt.replace(0, np.nan)
+    ag["rsh"] = ag.ca / ag.tc.replace(0, np.nan)
+    ag = ag[ag.g >= min_games]
+    ag["nxt"] = ag.season + 1
+    j = ag.merge(ag, left_on=["player_id", "nxt"], right_on=["player_id", "season"],
+                 suffixes=("", "_n"))
+    j["moved"] = j.team != j.team_n
+
+    out: dict[str, float] = {}
+    for pos in ("RB", "WR", "TE"):
+        key = "rsh" if pos == "RB" else "tsh"
+        s = j[(j.position == pos) & (j[key] > 0.03) & (j[key + "_n"] > 0.005)]
+        sds = {}
+        for moved in (False, True):
+            d = s[s.moved == moved]
+            if len(d) < 40:
+                sds[moved] = None
+                continue
+            x, y = np.log(d[key].to_numpy()), np.log(d[key + "_n"].to_numpy())
+            A = np.vstack([x, np.ones_like(x)]).T
+            coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+            sds[moved] = float((y - A @ coef).std())
+        if sds.get(False) and sds.get(True):
+            out[pos] = float(np.clip((sds[False] / sds[True]) ** 2, 0.3, 1.0))
+        else:
+            out[pos] = 0.7
+    out["QB"] = out.get("WR", 0.7)
+    return out
+
+
 def goalline_shares(season: int, lookback: int = 3) -> pd.DataFrame:
     """Carry share inside the 5, which drives rushing touchdowns."""
     pbp = data.play_by_play(range(season - lookback, season),

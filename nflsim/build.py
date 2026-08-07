@@ -203,6 +203,10 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     usage = usage.merge(gl[["gsis_id", "raw_gl_share"]], on="gsis_id", how="left")
     usage = usage.set_index("gsis_id")
 
+    team_frac = pl.team_weight_fractions(season)
+    team_frac_map = {(r.gsis_id, r.team): r.frac for r in team_frac.itertuples()}
+    move_penalty = pl.fit_team_change_penalty(season)
+
     log("fitting rookie draft-capital curves ...")
     curves = pl.fit_rookie_curves(season)
 
@@ -286,6 +290,19 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             # sample to 0.33, which is the behaviour that was wanted.
             ngames = float(hist.eff_games) if isinstance(hist, pd.Series) else 0.0
             conf = float(np.clip(ngames / (ngames + 8.0), 0.0, 0.92))
+
+            # A usage share describes an opportunity structure, not a property
+            # the player carries with him. History earned somewhere else is
+            # weaker evidence about the role he is walking into, by a measured
+            # amount -- a receiver's prior share retains only ~58% of its
+            # information after a move, a back ~72%. Without this a back who
+            # led another team's backfield imports that workload into a depth
+            # chart where he is listed second, and the starter ahead of him
+            # gets diluted at normalisation.
+            if isinstance(hist, pd.Series):
+                same = float(team_frac_map.get((pid, team), 0.0))
+                ratio = move_penalty.get(pos, 0.7)
+                conf *= ratio + (1.0 - ratio) * same
 
             if is_rookie:
                 rk = rookies.loc[pid]
