@@ -326,21 +326,29 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             else:
                 t_own, r_own = base["tshare"], base["rshare"]
 
-            # The depth chart is current information; a usage share is stale.
-            # When a player's own history implies a materially better job than
-            # the one his team has actually listed him for, believe the chart.
-            # Dameon Pierce carried a 0.257 share from his Houston lead-back
-            # years into a Philadelphia RB4 slot whose baseline is 0.029, and
-            # that one mismatch was enough to distort the whole backfield once
-            # the shares were normalised.
-            if isinstance(hist, pd.Series) and not is_rookie:
-                key = "rshare" if pos == "RB" else "tshare"
-                own_now = r_own if pos == "RB" else t_own
-                ladder = [baselines.get((pos, k), {key: 0.01})[key]
-                          for k in range(1, SLOTS[pos] + 1)]
-                implied = int(np.argmin([abs(own_now - b) for b in ladder])) + 1
-                conf /= 1.0 + max(int(r.depth_rank) - implied, 0)
-
+            # A rank-gap penalty used to sit here, dividing confidence when a
+            # player's history implied a better job than his listed depth slot,
+            # on the theory that the depth chart is current information and a
+            # usage share is stale. It was removed because the data contradicts
+            # it. Asking which predicts realised usage better, by position:
+            #
+            #                  depth rank   prior season
+            #   RB  2024/25       .731/.750    .721/.827
+            #   WR  2024/25       .451/.732    .718/.774
+            #   TE  2024/25       .452/.778    .733/.775
+            #
+            # The prior season wins in four of six, decisively for receivers.
+            # And restricting to exactly the case the penalty fired on -- chart
+            # and history disagreeing by two or more ranks -- history still wins
+            # for WR (.804 vs .700, n=24), while RB and TE have only four such
+            # cases across two seasons to judge from. So it was a mechanism
+            # built to fix two running backs, applied league-wide, and it cost
+            # receiver accuracy: WR backtest correlation fell .581 to .464.
+            #
+            # The confidence-weighted normalisation below handles the same
+            # problem without asserting anything about who is right, since a
+            # stale share is a low-confidence estimate and absorbs the
+            # reconciliation error on those grounds alone.
             tw[i] = conf * t_own + (1 - conf) * base["tshare"]
             rw[i] = conf * r_own + (1 - conf) * base["rshare"]
 
