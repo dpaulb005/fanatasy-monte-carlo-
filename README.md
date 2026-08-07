@@ -274,11 +274,26 @@ comparable numbers:
 
 | cohort | n | correlation | rank corr | MAE | bias |
 |---|---|---|---|---|---|
-| all positions | 200 | **0.599** | 0.583 | 61.3 | −4.7 |
-| RB | 59 | 0.635 | 0.611 | 70.2 | −3.6 |
-| WR | 80 | 0.581 | 0.571 | 59.3 | +2.0 |
-| TE | 29 | 0.485 | 0.248 | 40.5 | −22.3 |
-| QB | 32 | 0.342 | 0.254 | 68.7 | −7.3 |
+| all positions | 200 | **0.599** | 0.595 | 60.7 | +5.1 |
+| RB | 60 | 0.653 | 0.659 | 69.3 | +8.3 |
+| TE | 32 | 0.611 | 0.541 | 38.4 | −0.5 |
+| WR | 76 | 0.498 | 0.499 | 60.1 | +9.5 |
+| QB | 32 | 0.337 | 0.279 | 68.4 | −5.9 |
+
+On the cohort the only long-running public benchmark uses — top 20 QB/TE, top 40
+RB/WR, scored **within** position, which is the only like-for-like comparison:
+
+| pos | n | our R² | best published source | our MAE | best published |
+|---|---|---|---|---|---|
+| QB | 20 | 13.8% | 8.9% | 65.6 | 61.0 |
+| TE | 20 | 18.1% | 9.0% | 40.6 | — |
+| RB | 40 | 28.4% | 19.1% | **68.2** | **52.2** |
+| WR | 40 | 11.6% | 8.9% | 63.1 | — |
+
+R² is ahead at every position on a matched cohort; **mean absolute error is
+behind, badly at running back**. Their R² is one season's best source and their
+MAE an eleven-season average, so neither is a clean target — but the RB error gap
+is real, unexplained, and the most important open problem here.
 
 96.6% of actual league-wide fantasy production was on a modelled depth chart. The largest
 misses are the ones you'd expect and could not have known: James Conner and Tyreek Hill

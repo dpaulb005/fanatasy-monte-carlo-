@@ -39,16 +39,19 @@ QB/TE, top 40 RB/WR, scored within position):
 
 | pos | n | R² | published best | MAE | published best |
 |---|---|---|---|---|---|
-| QB | 20 | 17.3% | 8.9% | 63.6 | 61.0 |
-| TE | 20 | 15.6% | 9.0% | 43.7 | — |
-| RB | 40 | 30.9% | 19.1% | **66.8** | **52.2** |
-| WR | 40 | 8.5% | 8.9% | 65.7 | — |
+| QB | 20 | 13.8% | 8.9% | 65.6 | 61.0 |
+| TE | 20 | 18.1% | 9.0% | 40.6 | — |
+| RB | 40 | 28.4% | 19.1% | **68.2** | **52.2** |
+| WR | 40 | 11.6% | 8.9% | 63.1 | — |
 
-Read that honestly: **R² is ahead at QB/RB/TE, level at WR, and MAE is behind,
-badly at RB.** Published R² is one season's best source and published MAE is an
-eleven-season average, so neither is a clean target — but the RB error gap is
-real and unexplained. There is also a **+19.3 point upward bias on the top 40
-receivers** that has not been diagnosed.
+Read that honestly: **R² is ahead at every position on a matched cohort, and MAE
+is behind, badly at RB.** Published R² is one season's best source and published
+MAE is an eleven-season average, so neither is a clean target — but the RB error
+gap is real and unexplained. There is also a **+16.9 point upward bias on the top
+40 receivers** that has not been diagnosed.
+
+Pooled top-200: correlation .599, rank correlation .595, MAE 60.7. By position
+RB .653, TE .611, WR .498, QB .337.
 
 The MAE gap is the most important open problem in the project.
 
@@ -96,7 +99,7 @@ listed so the next session does not reinvent them.
    any position) with the injury model. Start by decomposing the error into
    games-played error versus per-game error.
 
-2. **+19.3 upward bias on top-40 receivers.** Undiagnosed. Check whether the
+2. **+16.9 upward bias on top-40 receivers.** Undiagnosed. Check whether the
    rank baselines pull low-usage WRs up: the WR baseline ladder is fairly flat
    (.230/.151/.098/.058/...) and a WR5 blended toward .032 may be too generous.
 
