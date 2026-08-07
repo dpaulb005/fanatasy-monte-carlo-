@@ -110,8 +110,17 @@ than fourteen games last year, and a raw game count cannot express that.
 yards, the yards-after-catch distribution, rushing yardage, sack and interception and
 fumble rates, field goal accuracy by distance, punt distance, clock runoff. Estimated as
 binned empirical frequencies with empirical-Bayes shrinkage rather than a fitted
-parametric model — with 350k plays the bins are dense enough to be stable, and an
+parametric model — with 480k plays the bins are dense enough to be stable, and an
 empirical bin cannot be wrong about a shape the way a misspecified link function can.
+
+Depth of target alone is not enough to price a pass, because the field compresses. A
+defence with no grass behind it covers far better: completion rates inside the ten fall to
+the high forties where the league-wide air-yards curve predicts the low seventies. That
+gap is fit as a residual by distance to the end zone (−12.6 points at the 5, decaying to
+zero by the 25, slightly *positive* backed up near your own goal line) and added to the
+depth curve. Without it, red zone passes complete far too often and passing touchdowns run
+more than 20% above the real rate — which inflates every quarterback and every target
+earner in the model.
 
 **2. Coaching.** Pass rate over expected, neutral-situation pace, fourth-down aggression
 and red zone tendency, attributed to the *coach* rather than the team. A staff that
@@ -169,12 +178,40 @@ simulation that produces beautiful distributions from broken physics is worse th
 useless, because it is confidently wrong.
 
 1. **League rates** — do simulated games look like NFL games? Plays, points, completion
-   percentage, yards per carry, touchdowns, interceptions, sack rate.
-2. **Positional cohorts** — do the top 12 QBs / 24 RBs / 36 WRs / 12 TEs score what those
-   cohorts actually score?
+   percentage, yards per carry, touchdowns, interceptions, sack rate. Scored against the
+   recency-weighted span the engine was fit to, with last season shown alongside.
+2. **Positional cohorts** — does the Nth-best finisher at each position score what those
+   finishers actually score? Ranked *within* each simulated season, then averaged.
 3. **Market** — where 2026 lines exist, do simulated totals agree? Advisory only. The
    model never sees betting lines, so disagreement is the point — but a *large*
    disagreement usually means the model is wrong, not the market.
+
+### Backtesting
+
+`python -m nflsim backtest --season 2025` is the stronger test. League rates only prove
+the engine makes NFL-shaped games; they say nothing about whether the model can tell
+*players* apart, which is the entire job. The backtest rebuilds the model knowing nothing
+after 2024 — play-by-play truncated, depth chart capped at a preseason date — projects the
+season, and scores it against what actually happened: correlation, rank correlation, mean
+absolute error and bias, overall and by position.
+
+It also reports **interval calibration**: how often the stated p10–p90 band actually
+contained the outcome. A distribution nobody has checked for overconfidence is a point
+estimate with decoration.
+
+Two caveats are reported rather than hidden: rosters are read at end-of-season state, so a
+player traded in October is credited to his final team; and production by players never
+carried on a depth chart is out of scope, which is why a coverage percentage is printed.
+
+### One correction worth naming
+
+An earlier version of the cohort check compared each position's *highest projected mean*
+against that position's *realised leader*, and the model looked badly pessimistic —
+tight ends came out 43% low. That was an artefact of the comparison, not the model. A
+season's leading tight end is the maximum of thirty-odd draws from thirty-odd different
+distributions, and the maximum of a sample is systematically larger than the largest mean.
+The check now ranks within each simulated season and then averages, which is the
+like-for-like quantity.
 
 ---
 

@@ -112,6 +112,12 @@ class LeaguePhysics:
 
     # Completion probability by air-yards bin.
     comp_by_ay: np.ndarray
+    # Completion probability above the air-yards curve, by yards from the end
+    # zone. The compressed field is a real and large effect that depth of
+    # target alone cannot express: a defence with no grass behind it covers
+    # far more effectively, and completion rates inside the ten fall to the
+    # high forties while the league curve would predict the low seventies.
+    comp_oe_by_yardline: np.ndarray
     # Mean and shape of YAC by air-yards bin (gamma parameters).
     yac_mean_by_ay: np.ndarray
     yac_shape: float
@@ -247,6 +253,22 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
     # Residual spread of air yards around a passer's average intent.
     ay_sd = float(passes.groupby("passer_player_id").air_yards.std().median())
 
+    # Compressed-field effect: how far actual completion rates sit above or
+    # below what the air-yards curve alone predicts, as a function of distance
+    # to the end zone. Fit as a residual so it composes additively with the
+    # depth-of-target curve instead of double-counting it.
+    resid = comp - comp_by_ay[ay_idx]
+    yl_i = np.clip(passes.yardline_100.to_numpy(float), 0, 99).astype(int)
+    r_num = _wcount(yl_i, resid * wp, 100)
+    r_den = _wcount(yl_i, wp, 100)
+    # Smooth across neighbouring yard lines before shrinking toward no effect.
+    kern = np.array([0.05, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05])
+    comp_oe_by_yardline = _smooth_rate(
+        np.convolve(r_num, kern, mode="same"),
+        np.convolve(r_den, kern, mode="same"),
+        0.0, 400.0,
+    )
+
     # ---- Rushing ---------------------------------------------------------
     rushes = reg[(reg.rush_attempt == 1) & (reg.qb_kneel != 1) & reg.yards_gained.notna()]
     wr = W(rushes)
@@ -367,6 +389,7 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
 
     return LeaguePhysics(
         comp_by_ay=comp_by_ay,
+        comp_oe_by_yardline=comp_oe_by_yardline,
         yac_mean_by_ay=yac_mean_by_ay,
         yac_shape=yac_shape,
         int_by_ay=int_by_ay,

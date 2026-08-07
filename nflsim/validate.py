@@ -38,6 +38,25 @@ except ImportError:                                   # pragma: no cover
     _RICH = False
 
 
+def _weighted_actual_rates(seasons, target: int, halflife: float) -> dict:
+    """Recency-weighted average of per-season league rates.
+
+    The engine is fit to a weighted span of seasons, not to last season, so
+    this is the reference it should be judged against. Scoring it purely
+    against the most recent year would penalise it for correctly declining to
+    chase a single season's noise. Last season is reported alongside, since
+    that is the year the projected one will most resemble.
+    """
+    from .priors import recency_weights
+
+    per_season = {yr: _actual_league_rates(yr) for yr in seasons}
+    w = recency_weights(np.array(list(per_season)), target, halflife)
+    w = w / w.sum()
+    keys = next(iter(per_season.values())).keys()
+    return {k: float(sum(per_season[yr][k] * wi
+                         for yr, wi in zip(per_season, w))) for k in keys}
+
+
 def _actual_league_rates(season: int) -> dict:
     """Per-team-game rates from a real season."""
     pbp = data.play_by_play([season])
@@ -123,15 +142,28 @@ def _actual_positional(season: int, scoring) -> dict:
 
 
 def _sim_positional(result, bundle, scoring) -> dict:
+    """Expected score of the Nth-best finisher at each position.
+
+    This must rank *within each simulated season* and then average, not average
+    each player and rank the averages. The two are very different quantities.
+    A real season's leading tight end is the best of thirty-two draws from
+    thirty-two different distributions -- the maximum of a sample -- and the
+    maximum of a sample is systematically larger than the largest mean.
+    Comparing a realised leader against the highest projected mean therefore
+    makes any honest model look badly pessimistic at the top of every position,
+    which is exactly the artefact this avoids.
+    """
     fp = fantasy_points(result["totals"], scoring)
-    mean_fp = fp.mean(axis=0)
     pt = bundle.player_table
     out = {}
     for pos, k in (("QB", 12), ("RB", 24), ("WR", 36), ("TE", 12)):
-        idx = pt.index[pt.pos == pos]
-        v = np.sort(mean_fp[idx])[::-1][:k]
-        out[pos] = {"top": float(v[0]), f"top{k} mean": float(v.mean()),
-                    f"#{k}": float(v[-1])}
+        idx = pt.index[pt.pos == pos].to_numpy()
+        sub = fp[:, idx]
+        # Sort descending within every replication, then average each rank.
+        ranked = -np.sort(-sub, axis=1)[:, :k]
+        out[pos] = {"top": float(ranked[:, 0].mean()),
+                    f"top{k} mean": float(ranked.mean()),
+                    f"#{k}": float(ranked[:, -1].mean())}
     return out
 
 
@@ -173,18 +205,22 @@ def run_validation(bundle, result, scoring, ref_season: int | None = None) -> No
                 print("  " + "  ".join(str(x) for x in r))
 
     # ---- 1. league rates ------------------------------------------------
-    actual = _actual_league_rates(ref)
+    from .priors import HALFLIFE_PHYSICS
+    era_seasons = list(range(ref - 4, ref + 1))
+    era = _weighted_actual_rates(era_seasons, bundle.season, HALFLIFE_PHYSICS)
+    last = _actual_league_rates(ref)
     sim = _sim_league_rates(result, bundle)
     rows = []
-    for k in actual:
-        a, s = actual[k], sim[k]
-        err = (s - a) / a * 100 if a else 0.0
+    for k in era:
+        e, a, s = era[k], last[k], sim[k]
+        err = (s - e) / e * 100 if e else 0.0
         colour = "green" if abs(err) < 5 else ("yellow" if abs(err) < 12 else "red")
-        rows.append([k, f"{s:,.2f}", f"{a:,.2f}",
+        rows.append([k, f"{s:,.2f}", f"{e:,.2f}", f"{a:,.2f}",
                      f"[{colour}]{err:+.1f}%[/]" if _RICH else f"{err:+.1f}%"])
-    show(f"Engine vs reality  ·  simulated 2026 vs actual {ref}", rows,
-         [("metric", "left"), ("simulated", "right"), (f"{ref} actual", "right"),
-          ("error", "right")])
+    show(f"Engine vs reality  ·  simulated {bundle.season}", rows,
+         [("metric", "left"), ("simulated", "right"),
+          (f"{era_seasons[0]}-{ref} weighted", "right"), (f"{ref} only", "right"),
+          ("error vs era", "right")])
 
     # ---- 2. positional cohorts -----------------------------------------
     pa, ps = _actual_positional(ref, scoring), _sim_positional(result, bundle, scoring)
@@ -209,8 +245,8 @@ def run_validation(bundle, result, scoring, ref_season: int | None = None) -> No
     rows = [["games with lines", f"{len(mk)}"],
             ["mean simulated total", f"{mk.sim_total.mean():.1f}"],
             ["mean market total", f"{mk.market_total.mean():.1f}"],
-            ["mean difference", f"{mk.diff.mean():+.1f}"],
-            ["mean absolute difference", f"{mk.diff.abs().mean():.1f}"]]
+            ["mean difference", f"{mk['diff'].mean():+.1f}"],
+            ["mean absolute difference", f"{mk['diff'].abs().mean():.1f}"]]
     show("Market sanity check  ·  advisory only", rows,
          [("metric", "left"), ("value", "right")])
     if _RICH:

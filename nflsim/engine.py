@@ -427,8 +427,13 @@ class GameSimulator:
                 ay = np.minimum(ay, y[thrown] + 3.0)
                 ay_i = _binidx(ay, AY_EDGES)
 
+                # Depth of target sets the base rate; distance to the end zone
+                # corrects it for the compressed field, which is a large effect
+                # inside the twenty and the reason red zone passing produces far
+                # fewer touchdowns than open-field completion rates imply.
+                field_oe = ph.comp_oe_by_yardline[np.clip(y[thrown], 0, 99).astype(int)]
                 cp = np.clip(
-                    ph.comp_by_ay[ay_i] + off.catch_oe[rec_j] + off.qb_cpoe[qb_j]
+                    ph.comp_by_ay[ay_i] + field_oe + off.catch_oe[rec_j] + off.qb_cpoe[qb_j]
                     + off.off_comp_oe + dfn.def_comp_oe + wind_pass * (ay > 12),
                     0.02, 0.98,
                 )
