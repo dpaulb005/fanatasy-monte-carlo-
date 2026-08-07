@@ -313,21 +313,6 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 ratio = move_penalty.get(pos, 0.7)
                 conf *= ratio + (1.0 - ratio) * same
 
-                # The depth chart is current information; a usage share is
-                # stale. When a player's history implies a far better job than
-                # the one his team has actually listed him for, believe the
-                # chart. Dameon Pierce carried a 0.257 share from his Houston
-                # lead-back years into a Philadelphia RB4 slot whose baseline
-                # is 0.029, and that single mismatch was enough to distort the
-                # whole backfield after normalisation.
-                key = "rshare" if pos == "RB" else "tshare"
-                own_now = r_own if pos == "RB" else t_own
-                ladder = [baselines.get((pos, k), {key: 0.01})[key]
-                          for k in range(1, SLOTS[pos] + 1)]
-                implied = int(np.argmin([abs(own_now - b) for b in ladder])) + 1
-                gap = max(int(r.depth_rank) - implied, 0)
-                conf /= 1.0 + 1.0 * gap
-
             if is_rookie:
                 rk = rookies.loc[pid]
                 t_own = float(rk.rk_target_share)
@@ -340,6 +325,21 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 r_own = float(hist.raw_rush_share) if np.isfinite(hist.raw_rush_share) else base["rshare"]
             else:
                 t_own, r_own = base["tshare"], base["rshare"]
+
+            # The depth chart is current information; a usage share is stale.
+            # When a player's own history implies a materially better job than
+            # the one his team has actually listed him for, believe the chart.
+            # Dameon Pierce carried a 0.257 share from his Houston lead-back
+            # years into a Philadelphia RB4 slot whose baseline is 0.029, and
+            # that one mismatch was enough to distort the whole backfield once
+            # the shares were normalised.
+            if isinstance(hist, pd.Series) and not is_rookie:
+                key = "rshare" if pos == "RB" else "tshare"
+                own_now = r_own if pos == "RB" else t_own
+                ladder = [baselines.get((pos, k), {key: 0.01})[key]
+                          for k in range(1, SLOTS[pos] + 1)]
+                implied = int(np.argmin([abs(own_now - b) for b in ladder])) + 1
+                conf /= 1.0 + max(int(r.depth_rank) - implied, 0)
 
             tw[i] = conf * t_own + (1 - conf) * base["tshare"]
             rw[i] = conf * r_own + (1 - conf) * base["rshare"]
