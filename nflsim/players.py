@@ -689,7 +689,13 @@ def fit_td_dispersion(season: int, lookback: int = 10, min_rec: int = 40,
     project has already had to remove once.
 
     Returns the sigma of a log-normal multiplier on scoring rate that would
-    reproduce the observed over-dispersion.
+    reproduce the observed over-dispersion, scaled up by the share of
+    touchdowns the mechanism can actually reach. The shock enters through red
+    zone target share, and only 71% of passing touchdowns originate inside the
+    twenty -- a first attempt routed it through goal-line share alone, which
+    covers 29%, and moved the dispersion ratio from 0.976 to 0.983 against a
+    target of 1.122. A shock applied to part of the opportunity has to be
+    correspondingly larger to deliver the same variance to the whole.
     """
     pw = data.player_week(range(season - lookback, season))
     pw = pw[(pw.season_type == "REG") & pw.position.isin(("WR", "TE"))]
@@ -708,7 +714,18 @@ def fit_td_dispersion(season: int, lookback: int = 10, min_rec: int = 40,
     # multiplicative season shock has to supply.
     extra = max(resid_var - mean_exp, 0.0)
     sigma2 = np.log1p(extra / max(mean_exp ** 2, 1e-9))
-    return float(np.clip(np.sqrt(sigma2), 0.0, 0.6))
+    sigma = np.sqrt(sigma2)
+
+    # What fraction of scoring the red zone channel reaches.
+    try:
+        pbp = data.play_by_play(range(season - 4, season),
+                                columns=["season", "season_type", "pass_touchdown",
+                                         "yardline_100"])
+        td_p = pbp[(pbp.season_type == "REG") & (pbp.pass_touchdown == 1)]
+        cover = float((td_p.yardline_100 <= 20).mean())
+    except Exception:
+        cover = 0.7
+    return float(np.clip(sigma / max(cover, 0.2), 0.0, 0.8))
 
 
 def availability_history(seasons) -> pd.DataFrame:
