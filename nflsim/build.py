@@ -411,7 +411,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 tw[i] = rw[i] = gw[i] = 0.0
 
             conf_arr[i] = conf
-            age = _age(birth.get(pid))
+            age = _age(birth.get(pid), season)
             base_h = haz["hazard"].get(pos, 0.05)
             inj_rate[i] = base_h * pl.age_injury_multiplier(age, pos)
             inj_dur[i] = haz["duration"].get(pos, 2.6)
@@ -604,7 +604,7 @@ def _pick(value, default, conf) -> float:
     return float(conf * value + (1 - conf) * default)
 
 
-def _age(birth) -> float:
+def _age(birth, season: int = TARGET_SEASON) -> float:
     if birth is None or (isinstance(birth, float) and not np.isfinite(birth)):
         return np.nan
     try:
@@ -613,7 +613,7 @@ def _age(birth) -> float:
         return np.nan
     if pd.isna(b):
         return np.nan
-    return float((pd.Timestamp(f"{TARGET_SEASON}-09-01") - b).days / 365.25)
+    return float((pd.Timestamp(f"{season}-09-01") - b).days / 365.25)
 
 
 def _qb_rush_rates(season: int, lookback: int = 4,

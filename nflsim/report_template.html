@@ -87,6 +87,29 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 .spacer{flex:1}
 .count{color:var(--muted); font-size:12.5px}
 
+/* ---- draft decision lab ----------------------------------------------- */
+.lab{margin:18px 0; padding:16px; border:1px solid var(--line); border-radius:10px;
+     background:var(--surface); box-shadow:var(--shadow)}
+.lab-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+.lab h2{font-size:15px; margin:0 0 3px; letter-spacing:-.01em}
+.lab p{margin:0; color:var(--muted); font-size:12.5px; max-width:82ch}
+.lab-empty{padding:16px 0 2px; color:var(--muted); font-size:12.5px}
+.lab-cards{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.lab-card{display:flex; gap:12px; align-items:center; padding:9px 10px;
+          border:1px solid var(--line); border-radius:8px; background:var(--raised)}
+.lab-card b{font-size:12.5px}.lab-card span{font-size:11px;color:var(--muted)}
+.lab-card button,.pick{
+  font:inherit; cursor:pointer; border:1px solid var(--line-2); border-radius:6px;
+  color:var(--ink-2); background:var(--surface); padding:3px 7px;
+}
+.pick{font-size:11px; min-width:28px}
+.pick.on{background:var(--accent); border-color:var(--accent); color:#fff}
+.lab-matrix{overflow-x:auto; margin-top:14px}
+.lab-matrix table{min-width:520px; width:auto}
+.lab-matrix th,.lab-matrix td{position:static; padding:7px 10px; font-size:11.5px}
+.lab-matrix td.win{color:var(--up); font-weight:650}.lab-matrix td.loss{color:var(--down)}
+.metric-note{margin-top:10px!important; font-size:11.5px!important}
+
 /* ---- table ------------------------------------------------------------- */
 /* The table needs horizontal overflow on narrow screens AND a sticky header.
    Those fight: `overflow-x:auto` forces overflow-y to `auto` too, which makes
@@ -172,15 +195,27 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
     <option value="p10">Sort: floor</option>
     <option value="ppg">Sort: points per game</option>
     <option value="bm">Sort: boom rate</option>
+    <option value="eq3">Sort: top-three equity</option>
+    <option value="start">Sort: starter probability</option>
   </select>
   <div class="spacer"></div>
   <span class="count" id="count"></span>
 </div>
 
+<section class="lab" aria-labelledby="labTitle">
+  <div class="lab-head">
+    <div><h2 id="labTitle">Draft decision lab</h2>
+      <p>Compare two to four players using the same simulated seasons. The matrix asks
+      who produced more value above that season's position-specific replacement player.</p></div>
+  </div>
+  <div id="labBody" class="lab-empty">Use the + buttons in the table to compare players.</div>
+</section>
+
 <div class="scroll">
   <table>
     <thead><tr>
       <th class="l" style="width:34px">#</th>
+      <th style="width:34px"><span class="dim">Lab</span></th>
       <th class="l">Player</th>
       <th class="l" style="width:52px">Pos</th>
       <th class="l" style="width:46px">Tm</th>
@@ -193,6 +228,8 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
       <th style="width:56px">VOR</th>
       <th style="width:54px">Boom</th>
       <th style="width:54px">Bust</th>
+      <th style="width:62px">Top 3</th>
+      <th style="width:62px">Starter</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -206,11 +243,14 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
 const DATA = __DATA__;
 const P = DATA.players, META = DATA.meta;
 const POSES = ["QB","RB","WR","TE"];
-let active = new Set(), open = null;
+let active = new Set(), selected = new Set(), open = null;
 
 const fmt = (v,n=0)=> v==null||!isFinite(v) ? "–" : v.toLocaleString(undefined,
   {minimumFractionDigits:n, maximumFractionDigits:n});
 const pct = v => (v*100).toFixed(0)+"%";
+const esc = s => String(s).replace(/[&<>"']/g, c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
 
 /* Global domain so every bar is comparable across the whole page. */
 const DOM = Math.max(...P.map(p=>p.p90), 1);
@@ -283,6 +323,9 @@ function detail(p){
       <div class="kv"><b class="num">${fmt(p.g,1)}</b><span>games</span></div>
       <div class="kv"><b class="num">${p.p}${p.pr}</b><span>positional rank</span></div>
       <div class="kv"><b class="num">${fmt(p.sd)}</b><span>std deviation</span></div>
+      <div class="kv"><b class="num">${pct(p.eq3)}</b><span>top-three finish</span></div>
+      <div class="kv"><b class="num">${pct(p.start)}</b><span>fantasy starter</span></div>
+      <div class="kv"><b class="num">${fmt(p.v10)} – ${fmt(p.v90)}</b><span>simulated VOR range</span></div>
     </div>
     <h3>Week by week</h3>
     <p class="lede">Bar spans the 10th to 90th percentile of that week's fantasy points;
@@ -295,6 +338,33 @@ function detail(p){
         <th>Avail</th>${heads.map(h=>`<th>${h}</th>`).join("")}
       </tr></thead><tbody>${rows}</tbody></table></div>
   </div>`;
+}
+
+function renderLab(){
+  const body=document.getElementById("labBody");
+  const picks=[...selected].map(id=>P.find(p=>p.id===id)).filter(Boolean);
+  if(picks.length<2){
+    body.className="lab-empty";
+    body.innerHTML=picks.length
+      ? `<b>${esc(picks[0].n)}</b> selected — choose at least one more player.`
+      : "Use the + buttons in the table to compare players.";
+    return;
+  }
+  const cards=picks.map(p=>`<div class="lab-card"><div><b>${esc(p.n)}</b><br>
+    <span>${p.p}${p.pr} · ${pct(p.eq3)} top-three · ${pct(p.start)} starter</span></div>
+    <button data-remove="${p.id}" aria-label="Remove ${esc(p.n)}">×</button></div>`).join("");
+  const heads=picks.map(p=>`<th>${esc(p.n.split(" ").slice(-1)[0])}</th>`).join("");
+  const rows=picks.map(a=>`<tr><th class="l">${esc(a.n)}</th>`+picks.map(b=>{
+    if(a.id===b.id) return '<td class="num dim">—</td>';
+    const v=DATA.lab.win[a.di][b.di];
+    return `<td class="num ${v>.5?'win':v<.5?'loss':''}">${pct(v)}</td>`;
+  }).join("")+"</tr>").join("");
+  body.className="";
+  body.innerHTML=`<div class="lab-cards">${cards}</div><div class="lab-matrix"><table>
+    <thead><tr><th class="l">Row beats →</th>${heads}</tr></thead><tbody>${rows}</tbody>
+    </table></div><p class="metric-note">Value is fantasy points above the replacement-level
+    player at the same position, recalculated independently in every simulated season.
+    Ties count as half a win.</p>`;
 }
 
 function visible(){
@@ -316,9 +386,12 @@ function render(){
   tb.innerHTML = rows.map((p,i)=>{
     const isOpen = open===p.n;
     return `<tr class="row${isOpen?" open":""}" data-n="${encodeURIComponent(p.n)}"
-        tabindex="0" role="button" aria-expanded="${isOpen}">
+        tabindex="0" aria-expanded="${isOpen}">
       <td class="l rank num">${i+1}</td>
-      <td class="l"><span class="name">${p.n}</span>${p.rook?'<span class="rookie">R</span>':""}</td>
+      <td><button class="pick${selected.has(p.id)?' on':''}" data-pick="${p.id}"
+          ${p.di<0?'disabled title="Available for the top 80 only"':''}
+          aria-label="${selected.has(p.id)?'Remove from':'Add to'} draft lab">${selected.has(p.id)?'✓':'+'}</button></td>
+      <td class="l"><span class="name">${esc(p.n)}</span>${p.rook?'<span class="rookie">R</span>':""}</td>
       <td class="l"><span class="pos ${p.p}">${p.p}</span></td>
       <td class="l team num">${p.t}</td>
       <td class="num big">${fmt(p.pts)}</td>
@@ -330,18 +403,32 @@ function render(){
       <td class="num">${fmt(p.vor)}</td>
       <td class="num dim">${pct(p.bm)}</td>
       <td class="num dim">${pct(p.bs)}</td>
+      <td class="num">${pct(p.eq3)}</td>
+      <td class="num">${pct(p.start)}</td>
     </tr>` + (isOpen
-      ? `<tr class="detail"><td colspan="13">${detail(p)}</td></tr>` : "");
+      ? `<tr class="detail"><td colspan="16">${detail(p)}</td></tr>` : "");
   }).join("");
+  renderLab();
 }
 
 function toggle(name){ open = (open===name) ? null : name; render(); }
 
 document.addEventListener("click", e=>{
+  const pick=e.target.closest("[data-pick]");
+  if(pick){
+    e.stopPropagation();
+    const id=Number(pick.dataset.pick);
+    if(selected.has(id)) selected.delete(id);
+    else if(selected.size<DATA.lab.limit) selected.add(id);
+    render(); return;
+  }
+  const remove=e.target.closest("[data-remove]");
+  if(remove){selected.delete(Number(remove.dataset.remove)); render(); return;}
   const tr=e.target.closest("tr.row"); if(tr) toggle(decodeURIComponent(tr.dataset.n));
 });
 document.addEventListener("keydown", e=>{
   if(e.key!=="Enter" && e.key!==" ") return;
+  if(e.target.closest?.("button,input,select")) return;
   const tr=e.target.closest?.("tr.row"); if(!tr) return;
   e.preventDefault(); toggle(decodeURIComponent(tr.dataset.n));
 });

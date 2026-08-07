@@ -128,6 +128,7 @@ WEEK_QUANTILES = (10, 25, 50, 75, 90)
 
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
                use_injuries: bool = True, use_role_variance: bool = True,
+               use_team_shocks: bool | None = None,
                scoring=None, weekly: bool = True) -> dict:
     """Simulate the full regular season `n_sims` times.
 
@@ -141,18 +142,41 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     from .analysis import fantasy_points
     from .config import PPR
     scoring = scoring or PPR
-    rng = np.random.default_rng(seed)
     P = len(bundle.player_table)
     sched = bundle.schedule
     weeks = int(sched.week.max())
+    # Named streams stop a change in one latent model from shifting every
+    # unrelated draw that follows it.  Each scheduled game also gets its own
+    # stream, so a changed branch in week 1 cannot perturb week 18.  Branches
+    # within one game can still consume different draws; these are controlled
+    # same-seed sensitivities, not exact play-level common-random-number pairs.
+    root = np.random.SeedSequence(seed)
+    (availability_seed, role_seed, shock_seed,
+     scoring_seed, games_seed) = root.spawn(5)
+    availability_rng = np.random.default_rng(availability_seed)
+    role_rng = np.random.default_rng(role_seed)
+    shock_rng = np.random.default_rng(shock_seed)
+    scoring_rng = np.random.default_rng(scoring_seed)
+    game_seeds = games_seed.spawn(len(sched))
 
-    if use_injuries:
-        avail = draw_availability(bundle, n_sims, rng, weeks)
-    else:
-        avail = np.ones((weeks, n_sims, P), dtype=np.float32)
-    role = draw_role_factors(bundle, n_sims, rng, enabled=use_role_variance)
-    shocks = draw_team_shocks(bundle, n_sims, rng, enabled=use_role_variance)
-    gl_role = draw_scoring_shocks(bundle, n_sims, rng, enabled=use_role_variance)
+    # Always draw every latent source, even when a scenario disables one.  It
+    # keeps the RNG at the same point before game simulation, so factor-off
+    # experiments use common random numbers instead of mistaking Monte Carlo
+    # noise for a model effect.  `None` preserves the historical API where
+    # disabling role variance also disabled team shocks.
+    if use_team_shocks is None:
+        use_team_shocks = use_role_variance
+    drawn_avail = draw_availability(bundle, n_sims, availability_rng, weeks)
+    drawn_role = draw_role_factors(bundle, n_sims, role_rng, enabled=True)
+    drawn_shocks = draw_team_shocks(bundle, n_sims, shock_rng, enabled=True)
+    drawn_gl = draw_scoring_shocks(bundle, n_sims, scoring_rng, enabled=True)
+    avail = (drawn_avail if use_injuries else
+             np.ones((weeks, n_sims, P), dtype=np.float32))
+    role = (drawn_role if use_role_variance else
+            np.ones((n_sims, P), dtype=np.float32))
+    shocks = drawn_shocks if use_team_shocks else {team: {} for team in bundle.teams}
+    gl_role = (drawn_gl if use_role_variance else
+               np.ones((n_sims, P), dtype=np.float32))
 
     totals = np.zeros((NSTAT, n_sims, P), dtype=np.float32)
     games_played = np.zeros((n_sims, P), dtype=np.float32)
@@ -181,11 +205,11 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
             weekly_fp[w, 2 + qi] = np.percentile(fp, q, axis=0)
         week_buf[:] = 0.0
 
-    sim = GameSimulator(bundle.physics, rng, n_sims)
     t0 = time.time()
     n_games = len(sched)
 
     for gi, row in enumerate(sched.itertuples(index=False)):
+        sim = GameSimulator(bundle.physics, np.random.default_rng(game_seeds[gi]), n_sims)
         home, away = row.home_team, row.away_team
         if home not in bundle.teams or away not in bundle.teams:
             continue
