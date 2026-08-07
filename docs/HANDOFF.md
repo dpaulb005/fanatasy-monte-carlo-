@@ -93,8 +93,9 @@ listed so the next session does not reinvent them.
 
 ## Open problems, in priority order
 
-1. **RB mean absolute error, 66.8 vs a published 52.2.** High RB correlation
-   (.556) with high RB error means the ordering is right and the scale is wrong.
+1. **RB mean absolute error, 68.2 vs a published 52.2.** High RB correlation
+   (.533 matched, .653 pooled) with high RB error means the ordering is right and
+   the scale is wrong.
    Suspect the interaction of role volatility (σ = 0.571 for RB, the largest of
    any position) with the injury model. Start by decomposing the error into
    games-played error versus per-game error.

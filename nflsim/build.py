@@ -50,6 +50,7 @@ class Bundle:
     coach_table: pd.DataFrame
     strength_table: pd.DataFrame
     season: int
+    td_sigma: float = 0.0            # season-to-season scoring-rate dispersion
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -228,6 +229,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     haz = pl.fit_injury_hazards(range(season - 8, season))
     role_sigma = pl.fit_role_volatility(season)
     team_shock = priors.fit_team_shock_sigmas(pbp)
+    td_sigma = pl.fit_td_dispersion(season)
     avail_hist = pl.availability_history(range(season - 4, season))
     # snap_counts identifies players by their PFR id, so bridge back to gsis.
     bridge = roster.dropna(subset=["pfr_id"]).set_index("pfr_id").gsis_id.to_dict()
@@ -499,7 +501,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     log(f"built {len(team_models)} teams, {len(ptab)} players")
     return Bundle(
         physics=physics, teams=team_models, player_table=ptab,
-        injury_rate=rate, injury_dur=dur, schedule=sched, role_sigma=role_sigma, team_shock=team_shock,
+        injury_rate=rate, injury_dur=dur, schedule=sched, role_sigma=role_sigma, team_shock=team_shock, td_sigma=td_sigma,
         coach_table=coach_tab, strength_table=stab, season=season,
     )
 

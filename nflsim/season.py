@@ -82,6 +82,24 @@ def draw_role_factors(bundle: Bundle, n_sims: int, rng: np.random.Generator,
     return np.exp(sigma[None, :] * z - 0.5 * sigma[None, :] ** 2).astype(np.float32)
 
 
+def draw_scoring_shocks(bundle: Bundle, n_sims: int, rng: np.random.Generator,
+                        enabled: bool = True) -> np.ndarray:
+    """(S, P) per-season multiplier on a player's goal-line role.
+
+    Drawn independently of the overall role factor, because a player's red zone
+    usage genuinely moves year to year beyond his general workload -- and
+    because that is the mechanism through which the missing touchdown variance
+    has to enter. Centred so the expectation is one, so scoring rates are
+    unchanged on average and only the spread widens.
+    """
+    P = len(bundle.player_table)
+    sigma = float(getattr(bundle, "td_sigma", 0.0) or 0.0)
+    if not enabled or sigma <= 0:
+        return np.ones((n_sims, P), dtype=np.float32)
+    z = rng.standard_normal((n_sims, P))
+    return np.exp(sigma * z - 0.5 * sigma ** 2).astype(np.float32)
+
+
 def draw_team_shocks(bundle: Bundle, n_sims: int, rng: np.random.Generator,
                      enabled: bool = True) -> dict[str, dict]:
     """Per-season offensive efficiency shocks, one draw per team per season.
@@ -134,6 +152,7 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
         avail = np.ones((weeks, n_sims, P), dtype=np.float32)
     role = draw_role_factors(bundle, n_sims, rng, enabled=use_role_variance)
     shocks = draw_team_shocks(bundle, n_sims, rng, enabled=use_role_variance)
+    gl_role = draw_scoring_shocks(bundle, n_sims, rng, enabled=use_role_variance)
 
     totals = np.zeros((NSTAT, n_sims, P), dtype=np.float32)
     games_played = np.zeros((n_sims, P), dtype=np.float32)
@@ -189,7 +208,8 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
 
         res = sim.run(hm, aw, av_h, av_a, weather, home_field=1.6,
                       role_home=role[:, hm.gidx], role_away=role[:, aw.gidx],
-                      shock_home=shocks.get(home), shock_away=shocks.get(away))
+                      shock_home=shocks.get(home), shock_away=shocks.get(away),
+                      gl_home=gl_role[:, hm.gidx], gl_away=gl_role[:, aw.gidx])
 
         totals[:, :, hm.gidx] += res["home_stats"]
         totals[:, :, aw.gidx] += res["away_stats"]
