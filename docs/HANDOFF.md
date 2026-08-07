@@ -133,10 +133,13 @@ listed so the next session does not reinvent them.
    shares are renormalised within a team, so one player's red zone gain is
    another's loss and *team* red zone efficiency cannot vary; and the 29% of
    touchdowns scored from outside the twenty carry no extra variance at all.
-   A team-level red zone conversion shock -- the same class as the existing
-   team pass/rush efficiency shocks -- is the obvious next move. Do not simply
-   raise sigma to hit the number; that is tuning, and the mechanism is the
-   thing that is incomplete.
+   **But closing it did not improve interval coverage**, which was the reason
+   for doing it: the 80% band went 71.0% -> 70.0% and the 50% band 36.5% ->
+   39.5%. So a team-level red zone shock, the obvious next extension, is
+   probably not worth building either -- it is the same class of effect and
+   the evidence says this class does not move the tails. Do not simply raise
+   sigma to hit 1.122; the mechanism is incomplete, not mis-sized, and the
+   payoff is not there.
 
 4. **Interval calibration overshoots.** Conformal fitted on 2024 and applied to
    2025 takes the 80% band from 71.0% coverage to 90.0% — it removes the
