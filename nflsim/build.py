@@ -425,7 +425,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     log(f"built {len(team_models)} teams, {len(ptab)} players")
     return Bundle(
         physics=physics, teams=team_models, player_table=ptab,
-        injury_rate=rate, injury_dur=dur, schedule=sched,
+        injury_rate=rate, injury_dur=dur, schedule=sched, role_sigma=role_sigma,
         coach_table=coach_tab, strength_table=stab, season=season,
     )
 
