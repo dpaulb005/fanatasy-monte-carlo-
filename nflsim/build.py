@@ -203,6 +203,12 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     usage = usage.merge(gl[["gsis_id", "raw_gl_share"]], on="gsis_id", how="left")
     usage = usage.set_index("gsis_id")
 
+    log("splitting rushing efficiency at the point of contact ...")
+    contact = pl.fit_contact_splits(season)
+    pfr_to_gsis = roster.dropna(subset=["pfr_id"]).set_index("pfr_id").gsis_id.to_dict()
+    yac_by_gsis = {pfr_to_gsis[k]: v for k, v in contact["player_yac"].items()
+                   if k in pfr_to_gsis}
+
     team_frac = pl.team_weight_fractions(season)
     team_frac_map = {(r.gsis_id, r.team): r.frac for r in team_frac.itertuples()}
     move_penalty = pl.fit_team_change_penalty(season)
@@ -337,7 +343,21 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 if np.isfinite(cr) and np.isfinite(hist.adot):
                     ai = priors._binidx([hist.adot], priors.AY_BINS)[0]
                     catch_oe[i] = np.clip((cr - physics.comp_by_ay[ai]) * conf, -0.12, 0.12)
-                ypc_oe[i] = np.clip((float(hist.ypc) - 4.3) * conf, -1.2, 1.2) if np.isfinite(hist.ypc) else 0.0
+                # Only the after-contact half of rushing efficiency belongs to
+                # the player; the before-contact half is his line and is
+                # applied at team level instead. Falls back to the raw
+                # yards-per-carry residual when PFR has no split for him.
+                # yards/carry = before contact + after contact, exactly, so the
+                # player's share of the residual is his after-contact delta with
+                # no scaling. Quarterbacks are excluded: their carries are
+                # scrambles and sneaks, which the handoff-oriented contact split
+                # does not describe -- charging Hurts his -0.60 after-contact
+                # figure would erase the scramble yardage that is most of his
+                # rushing value.
+                if pos != "QB" and pid in yac_by_gsis:
+                    ypc_oe[i] = float(np.clip(yac_by_gsis[pid], -1.2, 1.2))
+                elif np.isfinite(hist.ypc):
+                    ypc_oe[i] = float(np.clip((float(hist.ypc) - 4.3) * conf * 0.5, -0.8, 0.8))
                 if pos == "QB":
                     qb_adot[i] = _pick(hist.pass_adot, d["adot"], conf)
                     qb_sack[i] = np.clip((float(hist.sack_rate) - physics.sack_rate) * conf, -0.05, 0.09) \
@@ -415,7 +435,10 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             off_pass_epa=stq.off_pass_epa if stq else 0.0,
             off_rush_epa=stq.off_rush_epa if stq else 0.0,
             off_comp_oe=stq.off_comp_oe if stq else 0.0,
-            off_ypc_oe=stq.off_ypc_oe if stq else 0.0,
+            # Team rushing environment: the fitted EPA-based term plus the
+            # blocking component measured at the point of contact.
+            off_ypc_oe=(stq.off_ypc_oe if stq else 0.0)
+                       + float(contact["team_ybc"].get(team, 0.0)),
             off_sack_oe=stq.off_sack_oe if stq else 0.0,
             def_pass_epa=stq.def_pass_epa if stq else 0.0,
             def_rush_epa=stq.def_rush_epa if stq else 0.0,

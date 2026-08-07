@@ -244,6 +244,61 @@ def fit_usage(season: int, lookback: int = 4,
     return out.reset_index()
 
 
+def fit_contact_splits(season: int, lookback: int = 5,
+                       halflife: float = 1.5, min_att: int = 40) -> dict:
+    """Separate the offensive line from the running back.
+
+    Yards per carry is two different things added together, and treating it as
+    one number attributes the blocking to the runner. Pro Football Reference
+    splits every carry at the point of first contact, and the two halves behave
+    like different quantities entirely:
+
+        yards BEFORE contact   same team r=0.611   changed teams r=0.157
+        yards AFTER contact    same team r=0.482   changed teams r=0.330
+
+    Before-contact yardage all but evaporates when a back changes buildings --
+    it was the line, and the line stayed behind. After-contact yardage largely
+    travels with him, because that part is the runner. So the two are fit
+    separately: the before-contact component attaches to whichever team the
+    player is on in the projected season, and only the after-contact component
+    follows the player.
+
+    Broken tackles are deliberately excluded despite being the obvious metric
+    to reach for here -- they persist at r=0.09, which is noise.
+    """
+    adv = data.pfr_advstats("rush")
+    adv = adv[(adv.season >= season - lookback) & (adv.att >= min_att)].copy()
+    # The split columns are blank for some player-seasons, and a single blank
+    # poisons every weighted average downstream.
+    adv = adv.dropna(subset=["ybc_att", "yac_att"])
+    if adv.empty:
+        return {"player_yac": {}, "team_ybc": {}, "league": (0.0, 0.0)}
+    adv["w"] = _recency_weights(adv.season, season, halflife) * adv.att
+
+    lg_ybc = float(np.average(adv.ybc_att, weights=adv.w))
+    lg_yac = float(np.average(adv.yac_att, weights=adv.w))
+
+    # Player: after-contact only, shrunk toward league mean by carry volume.
+    k = 220.0
+    g = adv.groupby("pfr_id")
+    num = (adv.yac_att * adv.w).groupby(adv.pfr_id).sum()
+    den = adv.w.groupby(adv.pfr_id).sum()
+    player_yac = ((num + lg_yac * k) / (den + k) - lg_yac).to_dict()
+
+    # Team: before-contact, which is the blocking environment a back inherits.
+    # PFR files a player who changed teams mid-season under the pseudo-clubs
+    # "2TM"/"3TM"; those rows describe no actual offensive line and must not
+    # become one.
+    real = adv[~adv.tm.astype(str).str.match(r"^\dTM$")]
+    kt = 400.0
+    tnum = (real.ybc_att * real.w).groupby(real.tm).sum()
+    tden = real.w.groupby(real.tm).sum()
+    team_ybc = ((tnum + lg_ybc * kt) / (tden + kt) - lg_ybc).to_dict()
+
+    return {"player_yac": player_yac, "team_ybc": team_ybc,
+            "league": (lg_ybc, lg_yac)}
+
+
 def team_weight_fractions(season: int, lookback: int = 4,
                           halflife: float = 1.1) -> pd.DataFrame:
     """What share of each player's weighted history was earned on which team.
