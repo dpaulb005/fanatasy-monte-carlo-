@@ -203,12 +203,6 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     usage = usage.merge(gl[["gsis_id", "raw_gl_share"]], on="gsis_id", how="left")
     usage = usage.set_index("gsis_id")
 
-    log("splitting rushing efficiency at the point of contact ...")
-    contact = pl.fit_contact_splits(season)
-    pfr_to_gsis = roster.dropna(subset=["pfr_id"]).set_index("pfr_id").gsis_id.to_dict()
-    yac_by_gsis = {pfr_to_gsis[k]: v for k, v in contact["player_yac"].items()
-                   if k in pfr_to_gsis}
-
     team_frac = pl.team_weight_fractions(season)
     team_frac_map = {(r.gsis_id, r.team): r.frac for r in team_frac.itertuples()}
     move_penalty = pl.fit_team_change_penalty(season)
@@ -219,6 +213,14 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     log("loading depth charts and rosters ...")
     depth = pl.current_depth(season, as_of=as_of)
     roster = data.rosters(season)
+
+    log("splitting rushing efficiency at the point of contact ...")
+    # Must follow the roster load: PFR keys players by its own id, and the
+    # roster is what bridges that back to gsis.
+    contact = pl.fit_contact_splits(season)
+    pfr_to_gsis = roster.dropna(subset=["pfr_id"]).set_index("pfr_id").gsis_id.to_dict()
+    yac_by_gsis = {pfr_to_gsis[k]: v for k, v in contact["player_yac"].items()
+                   if k in pfr_to_gsis}
     rookies = pl.rookie_priors(season, curves, depth)
     rookies = rookies.set_index("gsis_id") if not rookies.empty else pd.DataFrame()
 
