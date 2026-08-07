@@ -123,6 +123,12 @@ def _effective_shares(base: np.ndarray, avail: np.ndarray, redis: np.ndarray) ->
     return out
 
 
+def _shock(shock: dict, key: str, rows: np.ndarray):
+    """Per-replication team efficiency offset for the active rows, or zero."""
+    v = shock.get(key) if shock else None
+    return 0.0 if v is None else v[rows]
+
+
 def _sample_player(cum: np.ndarray, rows: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Draw one roster slot per active replication from per-row weights."""
     sub = cum[rows]
@@ -175,7 +181,9 @@ class GameSimulator:
             avail_home: np.ndarray, avail_away: np.ndarray,
             weather: dict, home_field: float,
             role_home: np.ndarray | None = None,
-            role_away: np.ndarray | None = None) -> dict:
+            role_away: np.ndarray | None = None,
+            shock_home: dict | None = None,
+            shock_away: dict | None = None) -> dict:
         S, ph, rng = self.S, self.ph, self.rng
 
         teams = (away, home)
@@ -184,6 +192,9 @@ class GameSimulator:
         # who wins a bigger role keeps it all year rather than re-rolling it
         # every Sunday.
         roles = (role_away, role_home)
+        # Per-season team efficiency shocks: how far this offence lands from
+        # its own prior in this particular simulated year.
+        shocks = (shock_away or {}, shock_home or {})
 
         # Usage is fixed for the game once availability is known, so the injury
         # cascade is resolved once here rather than on every snap.
@@ -239,6 +250,7 @@ class GameSimulator:
 
                 off, dfn = teams[side], teams[1 - side]
                 st = stats[side]
+                shock = shocks[side]
                 tsh_cum, rsh_cum, rz_cum, gltgt_cum = cums[side]
                 glc = gl_cums[side]
                 qb = qbs[side]
@@ -302,7 +314,7 @@ class GameSimulator:
                 if sc.size:
                     self._scrimmage(
                         sc, rows, off, dfn, st, tsh_cum, rsh_cum, rz_cum, gltgt_cum,
-                        glc, qb, d_, tg, y, sd, sec, wind_pass,
+                        glc, qb, d_, tg, y, sd, sec, wind_pass, shock,
                         gain, turnover, clock, change, next_yl, scored_td,
                     )
 
@@ -391,7 +403,7 @@ class GameSimulator:
     # ------------------------------------------------------------------
     def _scrimmage(self, sc, rows, off: TeamModel, dfn: TeamModel, st,
                    tsh_cum, rsh_cum, rz_cum, gltgt_cum, glc, qb,
-                   d_, tg, y, sd, sec, wind_pass,
+                   d_, tg, y, sd, sec, wind_pass, shock,
                    gain, turnover, clock, change, next_yl, scored_td) -> None:
         """Resolve run/pass plays for the subset `sc` of the active rows.
 
@@ -462,7 +474,8 @@ class GameSimulator:
                 field_oe = ph.comp_oe_by_yardline[np.clip(y[thrown], 0, 99).astype(int)]
                 cp = np.clip(
                     ph.comp_by_ay[ay_i] + field_oe + off.catch_oe[rec_j] + off.qb_cpoe[qb_j]
-                    + off.off_comp_oe + dfn.def_comp_oe + wind_pass * (ay > 12),
+                    + off.off_comp_oe + dfn.def_comp_oe + _shock(shock, "comp", trow)
+                    + wind_pass * (ay > 12),
                     0.02, 0.98,
                 )
                 complete = rng.random(kt) < cp
@@ -521,7 +534,8 @@ class GameSimulator:
             qb_keep = rng.random(kr) < off.qb_rush_share[qb[rrow]]
             rush_j = np.where(qb_keep, qb[rrow], rush_j)
 
-            eff = off.ypc_oe[rush_j] + off.off_ypc_oe + dfn.def_ypc_oe
+            eff = (off.ypc_oe[rush_j] + off.off_ypc_oe + dfn.def_ypc_oe
+                   + _shock(shock, "ypc", rrow))
             raw = rng.gamma(ph.rush_shape, ph.rush_scale, kr) - ph.rush_shift + eff
             yards = np.minimum(raw, y[run_i])
 

@@ -82,6 +82,29 @@ def draw_role_factors(bundle: Bundle, n_sims: int, rng: np.random.Generator,
     return np.exp(sigma[None, :] * z - 0.5 * sigma[None, :] ** 2).astype(np.float32)
 
 
+def draw_team_shocks(bundle: Bundle, n_sims: int, rng: np.random.Generator,
+                     enabled: bool = True) -> dict[str, dict]:
+    """Per-season offensive efficiency shocks, one draw per team per season.
+
+    Team strength is otherwise a point estimate, which asserts that how well an
+    offence will play is knowable in August. It is not, and holding it fixed is
+    the main reason the projected intervals come out too narrow -- especially
+    for quarterbacks, whose scoring is almost entirely a function of how well
+    their offence happens to play that year.
+    """
+    sig = bundle.team_shock
+    out = {}
+    for team in bundle.teams:
+        if not enabled:
+            out[team] = {}
+            continue
+        out[team] = {
+            "comp": rng.normal(0.0, sig["comp"], n_sims),
+            "ypc": rng.normal(0.0, sig["ypc"], n_sims),
+        }
+    return out
+
+
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
                use_injuries: bool = True, use_role_variance: bool = True) -> dict:
     """Simulate the full regular season `n_sims` times."""
@@ -95,6 +118,7 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     else:
         avail = np.ones((weeks, n_sims, P), dtype=np.float32)
     role = draw_role_factors(bundle, n_sims, rng, enabled=use_role_variance)
+    shocks = draw_team_shocks(bundle, n_sims, rng, enabled=use_role_variance)
 
     totals = np.zeros((NSTAT, n_sims, P), dtype=np.float32)
     games_played = np.zeros((n_sims, P), dtype=np.float32)
@@ -122,7 +146,8 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
         }
 
         res = sim.run(hm, aw, av_h, av_a, weather, home_field=1.6,
-                      role_home=role[:, hm.gidx], role_away=role[:, aw.gidx])
+                      role_home=role[:, hm.gidx], role_away=role[:, aw.gidx],
+                      shock_home=shocks.get(home), shock_away=shocks.get(away))
 
         totals[:, :, hm.gidx] += res["home_stats"]
         totals[:, :, aw.gidx] += res["away_stats"]

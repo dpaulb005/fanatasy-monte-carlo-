@@ -462,6 +462,53 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
     )
 
 
+def fit_team_shock_sigmas(pbp: pd.DataFrame) -> dict[str, float]:
+    """How far a team's offence lands from its own prior, unpredictably.
+
+    Team strength is carried as a point estimate, which quietly asserts that a
+    team's efficiency is knowable in August. It is not: regressing team passing
+    accuracy on the prior season gives a slope near 0.38 and leaves a residual
+    of nearly three completion points. Holding efficiency fixed across every
+    simulated season is what makes the projected intervals too narrow, and it
+    hits quarterbacks hardest, since their scoring is almost entirely a
+    function of how well their offence happens to play.
+
+    The share of that residual the engine already generates through its own
+    play-level randomness is removed in quadrature, leaving the part that is
+    genuinely a property of the season rather than of the sample.
+    """
+    reg = pbp[pbp.season_type == "REG"]
+    att = reg[(reg.pass_attempt == 1) & (reg.sack != 1) & reg.cpoe.notna()]
+    rush = reg[(reg.rush_attempt == 1) & (reg.qb_kneel != 1)]
+
+    def residual_sd(df, col):
+        t = df.groupby(["season", "posteam"])[col].mean().reset_index()
+        t["nxt"] = t.season + 1
+        j = t.merge(t, left_on=["posteam", "nxt"], right_on=["posteam", "season"],
+                    suffixes=("", "_n"))
+        if len(j) < 40:
+            return 0.0
+        x, y = j[col].to_numpy(float), j[col + "_n"].to_numpy(float)
+        A = np.vstack([x, np.ones_like(x)]).T
+        coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+        return float((y - A @ coef).std())
+
+    comp_resid = residual_sd(att, "cpoe") / 100.0
+    ypc_resid = residual_sd(rush, "yards_gained")
+
+    # Within-season sampling noise the simulation reproduces on its own.
+    n_att = att.groupby(["season", "posteam"]).size().median()
+    n_rush = rush.groupby(["season", "posteam"]).size().median()
+    p = float(att.complete_pass.mean())
+    comp_samp = float(np.sqrt(p * (1 - p) / max(n_att, 1)))
+    ypc_samp = float(rush.yards_gained.std() / np.sqrt(max(n_rush, 1)))
+
+    return {
+        "comp": float(np.clip(np.sqrt(max(comp_resid ** 2 - comp_samp ** 2, 1e-6)), 0.0, 0.06)),
+        "ypc": float(np.clip(np.sqrt(max(ypc_resid ** 2 - ypc_samp ** 2, 1e-6)), 0.0, 0.8)),
+    }
+
+
 def _target_zone_multipliers(passes: pd.DataFrame, weights: np.ndarray,
                              ) -> tuple[np.ndarray, np.ndarray]:
     """How each position's share of targets shifts as the field shortens.
