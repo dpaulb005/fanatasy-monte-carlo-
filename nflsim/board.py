@@ -22,8 +22,20 @@ POS_STYLE = {"QB": "bright_magenta", "RB": "bright_green",
 TIER_STYLE = ["bold white", "bright_white", "white", "grey70", "grey58", "grey42"]
 
 
+# The board carries more columns than an 80-column default can hold, and rich
+# drops columns silently when it runs out of room -- the player names were the
+# first thing to disappear. Ask for the width the table actually needs, while
+# still using a wider terminal when there is one.
+MIN_WIDTH = 132
+
+
 def _console():
-    return Console() if _RICH else None
+    if not _RICH:
+        return None
+    con = Console()
+    if con.width < MIN_WIDTH:
+        con = Console(width=MIN_WIDTH)
+    return con
 
 
 def _fmt(v, nd=1):
@@ -48,8 +60,8 @@ def draft_board(df: pd.DataFrame, n: int = 60, scoring_name: str = "Full PPR",
         pad_edge=False,
     )
     t.add_column("#", justify="right", style="grey58", width=3)
-    t.add_column("Tier", justify="center", width=4)
-    t.add_column("Player", min_width=20)
+    t.add_column("Tr", justify="center", width=2)
+    t.add_column("Player", min_width=21, no_wrap=True)
     t.add_column("Pos", justify="center", width=4)
     t.add_column("Tm", justify="center", width=3)
     t.add_column("Proj", justify="right", width=6)
