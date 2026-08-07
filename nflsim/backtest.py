@@ -153,7 +153,7 @@ def score_matched(df: pd.DataFrame, scoring: Scoring) -> None:
             continue
         r = np.corrcoef(sub.points, sub.actual)[0, 1]
         rows.append([
-            pos, len(sub), f"{r:.3f}", f"{r*r*100:.1f}%",
+            pos, str(len(sub)), f"{r:.3f}", f"{r*r*100:.1f}%",
             f"{_spearman(sub.points, sub.actual):.3f}",
             f"{(sub.points - sub.actual).abs().mean():.1f}",
             f"{(sub.points - sub.actual).mean():+.1f}",
