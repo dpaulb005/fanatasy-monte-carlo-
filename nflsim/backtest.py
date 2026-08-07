@@ -77,7 +77,12 @@ def run_backtest(season: int, n_sims: int, scoring: Scoring, seed: int = 11,
     result = season_mod.run_season(bundle, n_sims=n_sims, seed=seed, verbose=verbose)
 
     proj = analysis.summarise(result, bundle, scoring)
-    proj = proj.assign(gsis_id=bundle.player_table.gsis_id.values)
+    # summarise() returns rows sorted by projected points while player_table is
+    # in global-index order, so this must align on the index. Assigning
+    # `.values` positionally silently pairs every player with someone else's
+    # actual season -- which looks like a model with no predictive power at all
+    # rather than like a bug.
+    proj["gsis_id"] = bundle.player_table.gsis_id.reindex(proj.index)
 
     act = actual_fantasy(season, scoring)
     df = proj.merge(act[["gsis_id", "actual"]], on="gsis_id", how="left")
