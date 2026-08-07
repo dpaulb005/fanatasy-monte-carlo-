@@ -96,6 +96,8 @@ def cmd_simulate(args):
 def cmd_board(args):
     b, res = _load_bundle(), _load_result()
     df = _frame(b, res, args)
+    if getattr(args, "team", None):
+        df = df[df.team == args.team.upper()]
     lg = _league(args)
     board.draft_board(df, n=args.top, scoring_name=_scoring(args).name,
                       league_desc=f"{lg.teams}-team")
@@ -105,9 +107,18 @@ def cmd_board(args):
 def cmd_projections(args):
     b, res = _load_bundle(), _load_result()
     df = _frame(b, res, args)
+    if getattr(args, "team", None):
+        df = df[df.team == args.team.upper()]
     for pos in (args.pos.split(",") if args.pos else ["QB", "RB", "WR", "TE"]):
         board.positional(df, pos.strip().upper(), n=args.top,
                          scoring_name=_scoring(args).name)
+
+
+def cmd_team(args):
+    """Full deep dive on one team."""
+    from .team_report import report
+    b, res = _load_bundle(), _load_result()
+    report(b, res, _scoring(args), args.team.upper(), _frame(b, res, args))
 
 
 def cmd_teams(args):
@@ -206,15 +217,22 @@ def main(argv=None):
 
     d = common(sub.add_parser("board", help="print the draft board"))
     d.add_argument("--top", type=int, default=60)
+    d.add_argument("--team", default=None, help="restrict to one team, e.g. PHI")
     d.set_defaults(func=cmd_board)
 
     pr = common(sub.add_parser("projections", help="per-position projections"))
     pr.add_argument("--pos", default=None, help="e.g. WR or QB,TE")
     pr.add_argument("--top", type=int, default=24)
+    pr.add_argument("--team", default=None, help="restrict to one team, e.g. PHI")
     pr.set_defaults(func=cmd_projections)
 
     t = common(sub.add_parser("teams", help="team wins, scoring and coaching"))
     t.set_defaults(func=cmd_teams)
+
+    tr = common(sub.add_parser(
+        "team", help="full deep dive on one team: identity, usage, stats, correlations"))
+    tr.add_argument("--team", required=True, help="team abbreviation, e.g. PHI")
+    tr.set_defaults(func=cmd_team)
 
     e = common(sub.add_parser("export", help="write CSV / parquet output"))
     e.add_argument("--out", default="projections")
