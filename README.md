@@ -166,6 +166,22 @@ reachable from this environment. Draft capital already prices in most of what co
 production tells you — NFL teams watched the same tape — so the loss is real but second
 order. `players.fit_rookie_curves` is where a college-stats provider would slot in.
 
+### Season-to-season role uncertainty
+
+A model that fixes every player's usage share at its expected value across all ten thousand
+seasons is not simulating the season — it is simulating the *average* of all seasons. Real
+years contain breakouts, benchings, scheme changes and jobs won in camp, and a model
+without that variance produces ceilings far too low and a top of the board far too flat.
+
+So each simulated season draws a role multiplier per player, once for the year (a player
+who wins a bigger role in camp keeps it). The size of that draw is fit, not assumed:
+regress log usage share on the prior year's, and take the residual spread. The regression
+slope comes out around 0.63 — that *is* mean reversion, and the prior already encodes it
+through shrinkage — so what's left is the genuinely unforecastable part. It is large:
+σ ≈ 0.57 for running backs, 0.44 for receivers and tight ends. The share-sampling noise the
+engine already generates through its own target draws is removed in quadrature so it isn't
+counted twice.
+
 ### Injuries
 
 Every player carries a weekly hazard of a new absence, with a duration drawn from a

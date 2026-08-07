@@ -483,6 +483,66 @@ def fit_injury_hazards(seasons, min_games: int = 3, min_snap_pct: float = 0.5) -
     return {"hazard": hazards, "duration": durations}
 
 
+def fit_role_volatility(season: int, lookback: int = 9,
+                        min_games: int = 8) -> dict[str, float]:
+    """How much a player's role moves in ways nobody could have predicted.
+
+    A projection that fixes every player's usage share at its expected value
+    across every simulated season is not simulating the season -- it is
+    simulating the average of all seasons. Real years contain breakouts,
+    benchings, scheme changes and jobs won in camp, and a model without that
+    variance produces ceilings that are far too low and a top of the board that
+    is far too flat.
+
+    Estimated by regressing log usage share on the prior year's, then taking
+    the residual spread. The regression slope (~0.63) *is* mean reversion, and
+    the prior already encodes it through shrinkage; what is left over is the
+    genuinely unforecastable part, and that is what the simulation should draw
+    from each season.
+
+    Sampling noise in the realised share is already produced by the engine's
+    own target draws, so it is removed in quadrature to avoid counting it
+    twice -- though at these magnitudes the correction is small.
+    """
+    pw = data.player_week(range(season - lookback, season))
+    pw = pw[(pw.season_type == "REG") & pw.position.isin(FANTASY_POSITIONS)]
+    tt = pw.groupby(["season", "team"]).agg(
+        tt=("targets", "sum"), tc=("carries", "sum")).reset_index()
+    ag = pw.groupby(["season", "team", "player_id", "position"], as_index=False).agg(
+        tg=("targets", "sum"), ca=("carries", "sum"), g=("week", "nunique"))
+    ag = ag.merge(tt, on=["season", "team"])
+    ag["tsh"] = ag.tg / ag.tt.replace(0, np.nan)
+    ag["rsh"] = ag.ca / ag.tc.replace(0, np.nan)
+    ag = ag[ag.g >= min_games]
+
+    out: dict[str, float] = {}
+    for pos in FANTASY_POSITIONS:
+        key = "rsh" if pos == "RB" else "tsh"
+        s = ag[(ag.position == pos) & (ag[key] > 0.03)].copy()
+        s["nxt"] = s.season + 1
+        j = s.merge(s, left_on=["player_id", "nxt"], right_on=["player_id", "season"],
+                    suffixes=("", "_n"))
+        if len(j) < 60:
+            out[pos] = 0.40
+            continue
+        x = np.log(j[key].to_numpy())
+        y = np.log(j[key + "_n"].to_numpy())
+        A = np.vstack([x, np.ones_like(x)]).T
+        coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+        resid = float((y - A @ coef).std())
+        # Remove the share-sampling component the engine already generates.
+        share = j[key].median()
+        n_events = j.tg.median() if key == "tsh" else j.ca.median()
+        samp = float(np.sqrt(max((1 - share) / max(n_events, 1.0), 0.0)))
+        out[pos] = float(np.clip(np.sqrt(max(resid ** 2 - samp ** 2, 0.01)), 0.1, 0.8))
+    # Quarterbacks have no usage share to perturb -- they are excluded from the
+    # target and carry pools entirely. Their job security is expressed through
+    # the depth chart and the availability model instead, so the fallback the
+    # loop assigns them is meaningless and is cleared here.
+    out["QB"] = 0.0
+    return out
+
+
 def availability_history(seasons) -> pd.DataFrame:
     """Each player's own record of being on the field.
 

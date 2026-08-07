@@ -64,8 +64,26 @@ def draw_availability(bundle: Bundle, n_sims: int, rng: np.random.Generator,
     return avail
 
 
+def draw_role_factors(bundle: Bundle, n_sims: int, rng: np.random.Generator,
+                      enabled: bool = True) -> np.ndarray:
+    """(S, P) multipliers on each player's usage share, one draw per season.
+
+    Drawn once per simulated season, not per game: a player who wins a larger
+    role in camp keeps it for the year. Log-normal, centred so the expected
+    multiplier is exactly one, which leaves projected means intact while
+    opening up the tails that a fixed-share model cannot produce.
+    """
+    P = len(bundle.player_table)
+    if not enabled:
+        return np.ones((n_sims, P), dtype=np.float32)
+    sigma = bundle.player_table.pos.map(bundle.role_sigma).fillna(0.0).to_numpy(float)
+    z = rng.standard_normal((n_sims, P))
+    # exp(sigma*z - sigma^2/2) has mean 1 for every sigma.
+    return np.exp(sigma[None, :] * z - 0.5 * sigma[None, :] ** 2).astype(np.float32)
+
+
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
-               use_injuries: bool = True) -> dict:
+               use_injuries: bool = True, use_role_variance: bool = True) -> dict:
     """Simulate the full regular season `n_sims` times."""
     rng = np.random.default_rng(seed)
     P = len(bundle.player_table)
@@ -76,6 +94,7 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
         avail = draw_availability(bundle, n_sims, rng, weeks)
     else:
         avail = np.ones((weeks, n_sims, P), dtype=np.float32)
+    role = draw_role_factors(bundle, n_sims, rng, enabled=use_role_variance)
 
     totals = np.zeros((NSTAT, n_sims, P), dtype=np.float32)
     games_played = np.zeros((n_sims, P), dtype=np.float32)
@@ -102,7 +121,8 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
             "outdoors": bool(pd.isna(roof) or str(roof) in ("outdoors", "open")),
         }
 
-        res = sim.run(hm, aw, av_h, av_a, weather, home_field=1.6)
+        res = sim.run(hm, aw, av_h, av_a, weather, home_field=1.6,
+                      role_home=role[:, hm.gidx], role_away=role[:, aw.gidx])
 
         totals[:, :, hm.gidx] += res["home_stats"]
         totals[:, :, aw.gidx] += res["away_stats"]

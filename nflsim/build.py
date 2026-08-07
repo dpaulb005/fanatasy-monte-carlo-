@@ -45,6 +45,7 @@ class Bundle:
     injury_rate: np.ndarray        # (P,) weekly hazard
     injury_dur: np.ndarray         # (P,) mean games missed
     schedule: pd.DataFrame
+    role_sigma: dict[str, float]     # season-to-season role volatility, by position
     coach_table: pd.DataFrame
     strength_table: pd.DataFrame
     season: int
@@ -212,6 +213,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
 
     log("fitting injury hazards ...")
     haz = pl.fit_injury_hazards(range(season - 8, season))
+    role_sigma = pl.fit_role_volatility(season)
     avail_hist = pl.availability_history(range(season - 4, season))
     # snap_counts identifies players by their PFR id, so bridge back to gsis.
     bridge = roster.dropna(subset=["pfr_id"]).set_index("pfr_id").gsis_id.to_dict()

@@ -107,8 +107,9 @@ def _effective_shares(base: np.ndarray, avail: np.ndarray, redis: np.ndarray) ->
     rather than smearing it evenly over the offence -- and the result is
     renormalised so every replication still sums to one.
     """
-    live = base[None, :] * avail
-    vacated = base[None, :] * (1.0 - avail)
+    b = base if base.ndim == 2 else base[None, :]
+    live = b * avail
+    vacated = b * (1.0 - avail)
     absorbed = (vacated @ redis.T) * avail
     eff = live + absorbed
     total = eff.sum(axis=1, keepdims=True)
@@ -172,21 +173,30 @@ class GameSimulator:
     # ------------------------------------------------------------------
     def run(self, home: TeamModel, away: TeamModel,
             avail_home: np.ndarray, avail_away: np.ndarray,
-            weather: dict, home_field: float) -> dict:
+            weather: dict, home_field: float,
+            role_home: np.ndarray | None = None,
+            role_away: np.ndarray | None = None) -> dict:
         S, ph, rng = self.S, self.ph, self.rng
 
         teams = (away, home)
         avails = (avail_away, avail_home)
+        # Per-season role factors, drawn once for the whole season so a player
+        # who wins a bigger role keeps it all year rather than re-rolling it
+        # every Sunday.
+        roles = (role_away, role_home)
 
         # Usage is fixed for the game once availability is known, so the injury
         # cascade is resolved once here rather than on every snap.
         cums, gl_cums, stats = [], [], []
-        for tm, av in zip(teams, avails):
-            tsh = _effective_shares(tm.target_share, av, tm.redistribute)
-            rzsh = _effective_shares(tm.rz_target_share, av, tm.redistribute)
-            glsh = _effective_shares(tm.gl_target_share, av, tm.redistribute)
-            rsh = _effective_shares(tm.rush_share, av, tm.redistribute)
-            gsh = _effective_shares(tm.gl_share, av, tm.redistribute)
+        for tm, av, role in zip(teams, avails, roles):
+            def base(v):
+                return v if role is None else v[None, :] * role
+
+            tsh = _effective_shares(base(tm.target_share), av, tm.redistribute)
+            rzsh = _effective_shares(base(tm.rz_target_share), av, tm.redistribute)
+            glsh = _effective_shares(base(tm.gl_target_share), av, tm.redistribute)
+            rsh = _effective_shares(base(tm.rush_share), av, tm.redistribute)
+            gsh = _effective_shares(base(tm.gl_share), av, tm.redistribute)
             cums.append((np.cumsum(tsh, axis=1), np.cumsum(rsh, axis=1),
                          np.cumsum(rzsh, axis=1), np.cumsum(glsh, axis=1)))
             gl_cums.append(np.cumsum(gsh, axis=1))
