@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from nflsim.experiments import Scenario, context_features, scenario_bundle
+from nflsim.season import draw_scoring_shocks
 
 
 def _team():
@@ -44,3 +45,16 @@ def test_context_features_measure_teammate_pressure_and_concentration():
     assert frame.loc[0, "rush_hhi"] == frame.loc[1, "rush_hhi"]
     assert bool(frame.loc[0, "new_coach"])
 
+
+def test_scoring_shock_is_centered_and_can_be_disabled():
+    bundle = SimpleNamespace(
+        td_sigma=0.31,
+        player_table=pd.DataFrame({"name": ["A", "B"]}),
+    )
+    rng = np.random.default_rng(7)
+    draw = draw_scoring_shocks(bundle, 100_000, rng)
+    assert np.allclose(draw.mean(axis=0), 1.0, atol=0.004)
+    assert np.array_equal(
+        draw_scoring_shocks(bundle, 5, np.random.default_rng(7), enabled=False),
+        np.ones((5, 2), dtype=np.float32),
+    )
