@@ -76,12 +76,18 @@ def cmd_simulate(args):
     b = _load_bundle()
     res = season_mod.run_season(b, n_sims=args.sims, seed=args.seed,
                                 use_injuries=not args.no_injuries)
-    np.savez_compressed(
-        RESULT, totals=res["totals"], games_played=res["games_played"],
+    # Write to a temporary path and rename into place. The result is hundreds
+    # of megabytes and takes a noticeable time to land; without this, anything
+    # reading the file mid-write gets a truncated archive rather than an
+    # honest "not finished yet".
+    tmp = RESULT.with_suffix(".npz.part")
+    np.savez(
+        tmp, totals=res["totals"], games_played=res["games_played"],
         team_points=np.array(res["team_points"], dtype=object),
         team_wins=np.array(res["team_wins"], dtype=object),
         n_sims=res["n_sims"],
     )
+    tmp.replace(RESULT)
     print(f"saved {args.sims:,} simulated seasons to {RESULT}")
 
 
