@@ -156,8 +156,21 @@ class LeaguePhysics:
     sec_hurry: float
     play_ob_rate: float
 
+    # How a position's share of the targets changes near the goal line,
+    # relative to its share over the whole field. Indexed by position code
+    # (0 QB, 1 RB, 2 WR, 3 TE). Offences do not simply compress their normal
+    # passing game as the field shortens -- they change who they throw to.
+    rz_target_mult: np.ndarray      # inside the 20
+    gl_target_mult: np.ndarray      # inside the 5
+
     # League baseline pass rate on a (down, togo, score, time) grid.
     xpass_grid: np.ndarray
+    # Pass rate above that grid, by yards from the end zone. Field position is
+    # deliberately kept out of the main grid -- adding a fifth axis would
+    # quarter the plays per cell -- but goal-line play-calling is emphatically
+    # not the same as midfield play-calling at the same down and distance, so
+    # it is carried as a separate residual.
+    xpass_oe_by_yardline: np.ndarray
     # League baseline fourth-down go-for-it rate on a (yl, togo) grid.
     go_grid: np.ndarray
 
@@ -360,9 +373,28 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
         & reg.down.notna()
     ]
     wcall = W(calls)
+    is_pass_call = (calls.play_type == "pass").to_numpy(float)
     xpass_grid = _rate_grid(
-        calls, (calls.play_type == "pass").to_numpy(float), prior=0.57, strength=60.0,
-        weights=wcall,
+        calls, is_pass_call, prior=0.57, strength=60.0, weights=wcall,
+    )
+
+    # How far real play-calling sits above the grid as a function of distance
+    # to the end zone. Inside the two, teams pass barely a third of the time
+    # where down and distance alone predict nearly half -- and that is exactly
+    # where touchdowns are scored, so ignoring it inflates passing scores and
+    # starves the running game of goal-line work.
+    call_flat = _grid_index(
+        calls.down.to_numpy(), calls.ydstogo.to_numpy(),
+        calls.score_differential.fillna(0).to_numpy(),
+        calls.game_seconds_remaining.fillna(1800).to_numpy(),
+    )
+    call_resid = is_pass_call - xpass_grid.reshape(-1)[call_flat]
+    call_yl = np.clip(calls.yardline_100.to_numpy(float), 0, 99).astype(int)
+    kern_c = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
+    xpass_oe_by_yardline = _smooth_rate(
+        np.convolve(_wcount(call_yl, call_resid * wcall, 100), kern_c, mode="same"),
+        np.convolve(_wcount(call_yl, wcall, 100), kern_c, mode="same"),
+        0.0, 400.0,
     )
 
     # ---- Fourth down go rate --------------------------------------------
@@ -376,6 +408,9 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
     den4 = _wcount(flat, w4, shape[0] * shape[1])
     num4 = _wcount(flat, went * w4, shape[0] * shape[1])
     go_grid = _smooth_rate(num4, den4, _wmean(went, w4), 25.0).reshape(shape)
+
+    # ---- Who gets thrown to near the goal line --------------------------
+    rz_target_mult, gl_target_mult = _target_zone_multipliers(passes, wp)
 
     off = reg[reg.epa.notna()]
     op = off[off.pass_attempt == 1]
@@ -416,12 +451,56 @@ def fit_league_physics(pbp: pd.DataFrame, season: int | None = None,
         sec_ob_bonus=0.0,
         sec_hurry=sec_hurry,
         play_ob_rate=0.16,
+        rz_target_mult=rz_target_mult,
+        gl_target_mult=gl_target_mult,
         xpass_grid=xpass_grid,
+        xpass_oe_by_yardline=xpass_oe_by_yardline,
         go_grid=go_grid,
         league_epa_pass=league_epa_pass,
         league_epa_rush=league_epa_rush,
         league_plays_per_game=float(plays_per_team_game),
     )
+
+
+def _target_zone_multipliers(passes: pd.DataFrame, weights: np.ndarray,
+                             ) -> tuple[np.ndarray, np.ndarray]:
+    """How each position's share of targets shifts as the field shortens.
+
+    Offences do not merely compress their normal passing game near the goal
+    line, they change who they throw to: tight ends take about 29% of targets
+    inside the five against 21% over the whole field, while running backs fall
+    from 19% to 12%. Modelling one target share for the entire field therefore
+    starves tight ends of exactly the throws that score and hands running backs
+    receiving touchdowns they do not get.
+
+    Returned as multipliers on the base share, indexed by position code, so
+    they compose with a player's own usage rather than replacing it.
+    """
+    from .config import FANTASY_POSITIONS
+
+    pos_map = data.players().dropna(subset=["gsis_id"]).set_index("gsis_id").position
+    pos = passes.receiver_player_id.map(pos_map)
+    ok = pos.isin(FANTASY_POSITIONS).to_numpy()
+    if ok.sum() < 5000:
+        return np.ones(4), np.ones(4)
+
+    codes = pos[ok].map({p: i for i, p in enumerate(("QB", "RB", "WR", "TE"))}).to_numpy(int)
+    w = np.asarray(weights)[ok]
+    yl = passes.yardline_100.to_numpy(float)[ok]
+
+    def share(mask):
+        c = np.bincount(codes[mask], weights=w[mask], minlength=4)
+        return c / max(c.sum(), 1e-9)
+
+    overall = share(np.ones(len(codes), dtype=bool))
+    rz = share(yl <= 20)
+    gl = share(yl <= 5)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rz_mult = np.where(overall > 1e-6, rz / overall, 1.0)
+        gl_mult = np.where(overall > 1e-6, gl / overall, 1.0)
+    # Quarterbacks are not in the target pool; keep their entry neutral.
+    rz_mult[0] = gl_mult[0] = 1.0
+    return np.clip(rz_mult, 0.4, 2.0), np.clip(gl_mult, 0.4, 2.0)
 
 
 GRID_SHAPE = (4, len(TOGO_BINS) - 1, len(SD_BINS) - 1, len(TIME_BINS) - 1)

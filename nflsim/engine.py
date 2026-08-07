@@ -57,6 +57,8 @@ class TeamModel:
     pos_code: np.ndarray      # 0 QB, 1 RB, 2 WR, 3 TE
 
     target_share: np.ndarray  # base shares, before availability
+    rz_target_share: np.ndarray   # inside the 20
+    gl_target_share: np.ndarray   # inside the 5
     rush_share: np.ndarray
     gl_share: np.ndarray
 
@@ -181,9 +183,12 @@ class GameSimulator:
         cums, gl_cums, stats = [], [], []
         for tm, av in zip(teams, avails):
             tsh = _effective_shares(tm.target_share, av, tm.redistribute)
+            rzsh = _effective_shares(tm.rz_target_share, av, tm.redistribute)
+            glsh = _effective_shares(tm.gl_target_share, av, tm.redistribute)
             rsh = _effective_shares(tm.rush_share, av, tm.redistribute)
             gsh = _effective_shares(tm.gl_share, av, tm.redistribute)
-            cums.append((np.cumsum(tsh, axis=1), np.cumsum(rsh, axis=1)))
+            cums.append((np.cumsum(tsh, axis=1), np.cumsum(rsh, axis=1),
+                         np.cumsum(rzsh, axis=1), np.cumsum(glsh, axis=1)))
             gl_cums.append(np.cumsum(gsh, axis=1))
             stats.append(np.zeros((NSTAT, S, tm.n), dtype=np.float64))
 
@@ -224,7 +229,7 @@ class GameSimulator:
 
                 off, dfn = teams[side], teams[1 - side]
                 st = stats[side]
-                tsh_cum, rsh_cum = cums[side]
+                tsh_cum, rsh_cum, rz_cum, gltgt_cum = cums[side]
                 glc = gl_cums[side]
                 qb = qbs[side]
                 hf = home_field if side == 1 else -home_field
@@ -286,8 +291,8 @@ class GameSimulator:
                 sc = np.flatnonzero(scrim)
                 if sc.size:
                     self._scrimmage(
-                        sc, rows, off, dfn, st, tsh_cum, rsh_cum, glc, qb,
-                        d_, tg, y, sd, sec, wind_pass,
+                        sc, rows, off, dfn, st, tsh_cum, rsh_cum, rz_cum, gltgt_cum,
+                        glc, qb, d_, tg, y, sd, sec, wind_pass,
                         gain, turnover, clock, change, next_yl, scored_td,
                     )
 
@@ -375,7 +380,8 @@ class GameSimulator:
 
     # ------------------------------------------------------------------
     def _scrimmage(self, sc, rows, off: TeamModel, dfn: TeamModel, st,
-                   tsh_cum, rsh_cum, glc, qb, d_, tg, y, sd, sec, wind_pass,
+                   tsh_cum, rsh_cum, rz_cum, gltgt_cum, glc, qb,
+                   d_, tg, y, sd, sec, wind_pass,
                    gain, turnover, clock, change, next_yl, scored_td) -> None:
         """Resolve run/pass plays for the subset `sc` of the active rows.
 
@@ -386,7 +392,12 @@ class GameSimulator:
         ph, rng, n = self.ph, self.rng, off.n
         grows = rows[sc]
 
+        # Down, distance, score and clock set the baseline; distance to the end
+        # zone corrects it, because goal-line play-calling is nothing like
+        # midfield play-calling at the same down and distance.
         xp = self._xpass(d_[sc], tg[sc], sd[sc], sec[sc])
+        xp = np.clip(xp + ph.xpass_oe_by_yardline[np.clip(y[sc], 0, 99).astype(int)],
+                     0.02, 0.98)
         shift = off.proe * 4.0 + np.where(y[sc] <= 20, off.rz_pass_oe * 4.0, 0.0)
         is_pass = rng.random(sc.size) < self._expit(self._logit(xp) + shift)
 
@@ -417,7 +428,14 @@ class GameSimulator:
             if thrown.size:
                 kt = thrown.size
                 qb_j = qb[trow]
-                rec_j = _sample_player(tsh_cum, trow, rng)
+                # Who is targeted depends on where the ball is. Near the goal
+                # line offences lean on tight ends and away from backs, so the
+                # draw comes from a zone-specific share vector.
+                yt = y[thrown]
+                rec_open = _sample_player(tsh_cum, trow, rng)
+                rec_rz = _sample_player(rz_cum, trow, rng)
+                rec_gl = _sample_player(gltgt_cum, trow, rng)
+                rec_j = np.where(yt <= 5, rec_gl, np.where(yt <= 20, rec_rz, rec_open))
 
                 # Air yards blend the receiver's usual depth with the passer's
                 # tendency; trailing late, offences push the ball downfield.

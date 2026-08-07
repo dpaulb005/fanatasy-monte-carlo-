@@ -268,12 +268,20 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 len(rookies) and pid in rookies.index
             )
 
-            # Confidence in a player's own history, saturating around a full
-            # season and a half. This uses the *recency-weighted* game count,
-            # not the raw one: a player whose volume is all from three seasons
-            # ago should not be trusted as though he played it last year.
+            # Confidence in a player's own history, using the *recency-weighted*
+            # game count rather than the raw one: a player whose volume is all
+            # from three seasons ago should not be trusted as though he played
+            # it last year.
+            #
+            # The shrinkage constant was 14, which left an established starter
+            # at only ~0.70 and visibly flattened the top of every position --
+            # players with four years of evidence that they command a quarter
+            # of an offence were dragged a third of the way back to the
+            # positional average. Target share is a sticky trait; 8 puts a
+            # four-year veteran near 0.80 while still shrinking a four-game
+            # sample to 0.33, which is the behaviour that was wanted.
             ngames = float(hist.eff_games) if isinstance(hist, pd.Series) else 0.0
-            conf = float(np.clip(ngames / (ngames + 14.0), 0.0, 0.85))
+            conf = float(np.clip(ngames / (ngames + 8.0), 0.0, 0.92))
 
             if is_rookie:
                 rk = rookies.loc[pid]
@@ -358,6 +366,11 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
         tw = _norm(tw)
         rw = _norm(rw)
         gw = _norm(gw)
+        # Zone-specific target shares: the same players, reweighted by how the
+        # league actually redistributes targets as the field shortens, then
+        # renormalised so each zone is its own distribution.
+        rz_tw = _norm(tw * physics.rz_target_mult[pos_code])
+        gl_tw = _norm(tw * physics.gl_target_mult[pos_code])
 
         qb_slots = np.flatnonzero(pos_code == 0)
         if qb_slots.size == 0:
@@ -368,7 +381,8 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
 
         team_models[team] = TeamModel(
             team=team, gidx=gidx, pos_code=pos_code,
-            target_share=tw, rush_share=rw, gl_share=gw,
+            target_share=tw, rz_target_share=rz_tw, gl_target_share=gl_tw,
+            rush_share=rw, gl_share=gw,
             adot=adot, yac_mean=yac, catch_oe=catch_oe, ypc_oe=ypc_oe,
             qb_slots=qb_slots, qb_cpoe=qb_cpoe, qb_adot=qb_adot,
             qb_sack_oe=qb_sack, qb_rush_share=qb_rsh,

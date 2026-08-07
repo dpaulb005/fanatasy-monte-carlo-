@@ -113,14 +113,26 @@ binned empirical frequencies with empirical-Bayes shrinkage rather than a fitted
 parametric model — with 480k plays the bins are dense enough to be stable, and an
 empirical bin cannot be wrong about a shape the way a misspecified link function can.
 
-Depth of target alone is not enough to price a pass, because the field compresses. A
-defence with no grass behind it covers far better: completion rates inside the ten fall to
-the high forties where the league-wide air-yards curve predicts the low seventies. That
-gap is fit as a residual by distance to the end zone (−12.6 points at the 5, decaying to
-zero by the 25, slightly *positive* backed up near your own goal line) and added to the
-depth curve. Without it, red zone passes complete far too often and passing touchdowns run
-more than 20% above the real rate — which inflates every quarterback and every target
-earner in the model.
+**The short field is its own game.** Three separate corrections are carried by distance to
+the end zone, each fit as a residual so it composes with the main model rather than
+replacing it. They matter more than their size suggests, because everything they affect
+happens where points are scored.
+
+- *Completion.* A defence with no grass behind it covers far better. Completion rates
+  inside the ten fall to the high forties where the league-wide air-yards curve predicts
+  the low seventies. Correction: −12.6 points at the 5, decaying to zero by the 25, and
+  slightly *positive* backed up near your own goal line.
+- *Play-calling.* Inside the two, offences pass 33.8% of the time; down and distance alone
+  predict 46.9%. Field position is kept out of the main play-call grid — a fifth axis
+  would quarter the plays per cell — so it rides as a separate residual.
+- *Who gets targeted.* Offences do not just compress their normal passing game near the
+  goal line, they change who they throw to. Tight ends take 29.3% of targets inside the 5
+  against 21.4% over the whole field; running backs fall from 19.2% to 12.0%. Modelling
+  one target share for the whole field starves tight ends of exactly the throws that score
+  and hands running backs receiving touchdowns they do not get.
+
+Without these, red zone passes complete far too often, passing touchdowns run 16–23% above
+the real rate, and the touchdown mix skews away from the running game.
 
 **2. Coaching.** Pass rate over expected, neutral-situation pace, fourth-down aggression
 and red zone tendency, attributed to the *coach* rather than the team. A staff that
