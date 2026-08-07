@@ -20,7 +20,8 @@ be bootstrapped by team-season.
 ### Implemented and measurable now
 
 - Controlled league-wide factor-off simulations for injuries, role volatility,
-  team efficiency uncertainty, coaching scheme and full team context. These
+  team efficiency uncertainty, scoring-rate dispersion, coaching scheme and
+  full team context. These
   include teammate/opponent interactions and are not isolated causal effects.
 - Teammate pressure and usage concentration: target/carry/goal-line shares,
   within-position role margin and team HHI.

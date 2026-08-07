@@ -29,6 +29,7 @@ class Scenario:
     injuries: bool = True
     role_variance: bool = True
     team_shocks: bool = True
+    scoring_shocks: bool = True
     neutral_coach: bool = False
     neutral_strength: bool = False
 
@@ -38,6 +39,7 @@ SCENARIOS = (
     Scenario("healthy", injuries=False),
     Scenario("fixed_roles", role_variance=False),
     Scenario("fixed_team_efficiency", team_shocks=False),
+    Scenario("fixed_scoring_rate", scoring_shocks=False),
     Scenario("neutral_scheme", neutral_coach=True),
     Scenario("neutral_team_context", neutral_coach=True, neutral_strength=True),
 )
@@ -124,6 +126,7 @@ def run_factor_experiment(bundle, scoring: Scoring, n_sims: int = 2000,
             use_injuries=scenario.injuries,
             use_role_variance=scenario.role_variance,
             use_team_shocks=scenario.team_shocks,
+            use_scoring_shocks=scenario.scoring_shocks,
             scoring=scoring,
         )
         results[scenario.name] = result
@@ -143,6 +146,7 @@ def run_factor_experiment(bundle, scoring: Scoring, n_sims: int = 2000,
         "role_system_ceiling_lift": base["p90"] - summaries["fixed_roles"]["p90"],
         "role_sd_lift": base["sd"] - summaries["fixed_roles"]["sd"],
         "team_uncertainty_lift": base["p90"] - summaries["fixed_team_efficiency"]["p90"],
+        "scoring_dispersion_lift": base["p90"] - summaries["fixed_scoring_rate"]["p90"],
         # Positive values mean the fitted environment helps versus neutral.
         "league_scheme_delta": base["mean"] - summaries["neutral_scheme"]["mean"],
         "neutral_context_delta": base["mean"] - summaries["neutral_team_context"]["mean"],
@@ -177,7 +181,8 @@ def generate_html(df: pd.DataFrame, meta: dict, out_path: Path) -> Path:
     """Write a compact, self-contained factor-attribution explorer."""
     cols = [
         "player", "pos", "team", "points", "health_environment_delta",
-        "role_system_ceiling_lift", "team_uncertainty_lift", "league_scheme_delta",
+        "role_system_ceiling_lift", "team_uncertainty_lift", "scoring_dispersion_lift",
+        "league_scheme_delta",
         "neutral_context_delta",
         "target_share", "rush_share", "goal_line_share", "role_margin",
         "contingent_gain", "behind", "volume_ratio", "td_dependence",
@@ -211,7 +216,7 @@ td:first-child{font-weight:620}.pos{font-size:11px;color:var(--accent)}.up{color
 <p>Controlled Monte Carlo factor attribution. Every scenario starts from the same seeded random streams with one source removed. Because changed plays alter later game states, treat small differences as sensitivity estimates, not exact causal effects.</p>
 <div class="facts" id="facts"></div><p class="note"><b>Interpretation:</b> these are league-wide system sensitivities: teammates and opponents change too. A negative healthy-environment delta for a backup can be real because starter injuries create his opportunity. Positive role/team tail values show ceiling created by uncertainty; positive scheme/context values mean the fitted league environment helps versus neutral. They are not isolated player effects or causal estimates. Runs below 5,000 simulations are exploratory.</p>
 <div class="controls"><input id="q" type="search" placeholder="Search player or team…"><select id="pos"><option value="">All positions</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option></select><select id="sort"><option value="points">Projected points</option><option value="health_environment_delta">Healthy environment</option><option value="role_system_ceiling_lift">Role-system ceiling</option><option value="league_scheme_delta">League scheme</option><option value="neutral_context_delta">Neutral context</option><option value="contingent_gain">Contingent upside</option></select><span class="count" id="count"></span></div>
-<div class="scroll"><table><thead><tr><th>Player</th><th>Pos</th><th>Team</th><th>Pts</th><th><span class="tip" title="All-healthy league mean minus baseline mean">Healthy env</span></th><th><span class="tip" title="Baseline p90 minus league-wide fixed-role p90">Role-system tail</span></th><th>Team σ tail</th><th>League scheme</th><th>Neutral context</th><th>Tgt share</th><th>Rush share</th><th>GL share</th><th>Role margin</th><th>Backup gain</th><th>Behind</th><th>Ceiling volume</th><th>TD dependence</th></tr></thead><tbody id="body"></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>Player</th><th>Pos</th><th>Team</th><th>Pts</th><th><span class="tip" title="All-healthy league mean minus baseline mean">Healthy env</span></th><th><span class="tip" title="Baseline p90 minus league-wide fixed-role p90">Role-system tail</span></th><th>Team σ tail</th><th>TD dispersion</th><th>League scheme</th><th>Neutral context</th><th>Tgt share</th><th>Rush share</th><th>GL share</th><th>Role margin</th><th>Backup gain</th><th>Behind</th><th>Ceiling volume</th><th>TD dependence</th></tr></thead><tbody id="body"></tbody></table></div>
 <script>const D=__DATA__,P=D.players;const f=(v,n=1)=>v==null||!isFinite(v)?"–":Number(v).toFixed(n),pc=v=>v==null?"–":f(v*100,1)+"%",e=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function cell(v,kind="num"){const c=v>0.5?"up":v<-.5?"down":"";return `<td class="${c}">${f(v)}</td>`}function render(){const q=document.querySelector('#q').value.toLowerCase(),pos=document.querySelector('#pos').value,key=document.querySelector('#sort').value;const rows=P.filter(p=>(!pos||p.pos===pos)&&(!q||p.player.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))).sort((a,b)=>(b[key]??-1e9)-(a[key]??-1e9));document.querySelector('#count').textContent=`${rows.length} players`;document.querySelector('#body').innerHTML=rows.map(p=>`<tr><td>${e(p.player)}</td><td class="pos">${p.pos}</td><td>${p.team}</td><td>${f(p.points,0)}</td>${cell(p.health_environment_delta)}${cell(p.role_system_ceiling_lift)}${cell(p.team_uncertainty_lift)}${cell(p.league_scheme_delta)}${cell(p.neutral_context_delta)}<td>${pc(p.target_share)}</td><td>${pc(p.rush_share)}</td><td>${pc(p.goal_line_share)}</td>${cell(p.role_margin)}${cell(p.contingent_gain)}<td>${e(p.behind||'')}</td><td>${f(p.volume_ratio,2)}</td><td>${f(p.td_dependence,2)}</td></tr>`).join('')}
+function cell(v,kind="num"){const c=v>0.5?"up":v<-.5?"down":"";return `<td class="${c}">${f(v)}</td>`}function render(){const q=document.querySelector('#q').value.toLowerCase(),pos=document.querySelector('#pos').value,key=document.querySelector('#sort').value;const rows=P.filter(p=>(!pos||p.pos===pos)&&(!q||p.player.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))).sort((a,b)=>(b[key]??-1e9)-(a[key]??-1e9));document.querySelector('#count').textContent=`${rows.length} players`;document.querySelector('#body').innerHTML=rows.map(p=>`<tr><td>${e(p.player)}</td><td class="pos">${p.pos}</td><td>${p.team}</td><td>${f(p.points,0)}</td>${cell(p.health_environment_delta)}${cell(p.role_system_ceiling_lift)}${cell(p.team_uncertainty_lift)}${cell(p.scoring_dispersion_lift)}${cell(p.league_scheme_delta)}${cell(p.neutral_context_delta)}<td>${pc(p.target_share)}</td><td>${pc(p.rush_share)}</td><td>${pc(p.goal_line_share)}</td>${cell(p.role_margin)}${cell(p.contingent_gain)}<td>${e(p.behind||'')}</td><td>${f(p.volume_ratio,2)}</td><td>${f(p.td_dependence,2)}</td></tr>`).join('')}
 document.querySelector('#facts').innerHTML=[[D.meta.sims.toLocaleString(),'simulated seasons'],[D.meta.scoring,'scoring'],[D.meta.scenarios.length,'controlled scenarios'],[P.length,'players']].map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');['q','pos','sort'].forEach(id=>document.querySelector('#'+id).addEventListener('input',render));render();</script></main>'''
