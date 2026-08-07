@@ -88,10 +88,16 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 .count{color:var(--muted); font-size:12.5px}
 
 /* ---- table ------------------------------------------------------------- */
-.scroll{overflow-x:auto}
+/* The table needs horizontal overflow on narrow screens AND a sticky header.
+   Those fight: `overflow-x:auto` forces overflow-y to `auto` too, which makes
+   this box the sticky header's scrollport instead of the viewport, and the
+   header then lands mid-table on top of the first row. Resolved by making the
+   region an honest scroller with its own height, so the header sticks to the
+   top of the thing it actually belongs to. */
+.scroll{overflow:auto; max-height:calc(100vh - 64px); overscroll-behavior:contain}
 table{width:100%; border-collapse:collapse; min-width:940px}
 thead th{
-  position:sticky; top:52px; z-index:10; background:var(--bg);
+  position:sticky; top:0; z-index:10; background:var(--bg);
   text-align:right; font-size:10.5px; font-weight:600; letter-spacing:.07em;
   text-transform:uppercase; color:var(--muted); padding:10px 8px;
   border-bottom:1px solid var(--line-2); white-space:nowrap;
@@ -99,6 +105,10 @@ thead th{
 thead th.l{text-align:left}
 tbody td{padding:9px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap}
 tbody td.l{text-align:left}
+/* Two stacked sticky bars (controls, then the header row) sit above the table.
+   Without this, scrolling a row into view parks it underneath them, where the
+   header swallows the click and the row looks unresponsive. */
+tbody tr{scroll-margin-top:44px}
 tbody tr.row{cursor:pointer}
 tbody tr.row:hover{background:var(--raised)}
 tbody tr.row.open{background:var(--raised)}
@@ -116,8 +126,11 @@ tbody tr.row.open{background:var(--raised)}
 .tier{font-size:11px; color:var(--muted)}
 
 /* ---- expanded panel ---------------------------------------------------- */
-.detail td{padding:0; border-bottom:1px solid var(--line-2); background:var(--sunken)}
-.panel{padding:20px 10px 26px}
+/* The panel lives inside a table cell, which sets text-align:right for the
+   numeric columns. Reset it here or the heading and the week strip drift to
+   the right edge of the row. */
+.detail td{padding:0; border-bottom:1px solid var(--line-2); background:var(--sunken); text-align:left}
+.panel{padding:20px 10px 26px; text-align:left}
 .panel h3{margin:0 0 3px; font-size:13px; font-weight:620; letter-spacing:-.008em}
 .panel .lede{margin:0 0 14px; color:var(--muted); font-size:12px}
 .wkgrid{overflow-x:auto}

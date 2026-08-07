@@ -4,3 +4,4 @@ artifacts/
 projections/
 out/
 .cache/
+report.html
