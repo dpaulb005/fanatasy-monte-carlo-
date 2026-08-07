@@ -444,9 +444,11 @@ document.getElementById("facts").innerHTML = [
 
 document.getElementById("caveat").innerHTML =
   "<b>Read the percentiles as ordering, not as probability.</b> Backtesting against 2025 " +
-  "found the stated p10–p90 band contained the actual outcome about 68% of the time " +
-  "against a nominal 80%, so real floors and ceilings are wider than shown. " +
-  "Out-of-sample correlation with realised season points was 0.60.";
+  "found the stated p10–p90 band contained the actual outcome 70% of the time against a " +
+  "nominal 80%, so real floors and ceilings are wider than shown. Three separate attempts " +
+  "to close that from inside the simulation each moved it about a point, which points at " +
+  "model error rather than missing player variance. Out-of-sample correlation with " +
+  "realised season points was 0.60, and mean absolute error 61.";
 
 document.getElementById("posChips").innerHTML = POSES.map(p=>
   `<button class="chip ${p.toLowerCase()}" data-p="${p}" aria-pressed="false">${p}</button>`).join("");
