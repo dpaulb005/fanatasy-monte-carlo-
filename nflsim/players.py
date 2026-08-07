@@ -671,6 +671,46 @@ def fit_role_volatility(season: int, lookback: int = 9,
     return out
 
 
+def fit_td_dispersion(season: int, lookback: int = 10, min_rec: int = 40,
+                      min_games: int = 14) -> float:
+    """How much more touchdowns vary than reception volume alone explains.
+
+    The engine derives scoring almost entirely from opportunity: a pass reaches
+    the end zone, a goal-line carry converts at the observed rate for that yard
+    line. That makes simulated touchdowns very nearly Poisson given volume --
+    measured at a dispersion ratio of 0.98 against real receiving touchdowns at
+    1.12. Real scoring carries extra season-to-season variation that volume does
+    not account for, and touchdowns are the highest-leverage stat in fantasy
+    scoring, so under-dispersing them under-disperses everything downstream.
+
+    Only the random part is modelled. Touchdowns over expectation persist year to
+    year at r = 0.22, which is real but far too weak to estimate as a per-player
+    trait without inviting exactly the kind of thinly-evidenced mechanism this
+    project has already had to remove once.
+
+    Returns the sigma of a log-normal multiplier on scoring rate that would
+    reproduce the observed over-dispersion.
+    """
+    pw = data.player_week(range(season - lookback, season))
+    pw = pw[(pw.season_type == "REG") & pw.position.isin(("WR", "TE"))]
+    ag = pw.groupby(["season", "player_id"], as_index=False).agg(
+        td=("receiving_tds", "sum"), rec=("receptions", "sum"),
+        g=("week", "nunique"))
+    ag = ag[(ag.g >= min_games) & (ag.rec >= min_rec)]
+    if len(ag) < 100:
+        return 0.20
+
+    rate = ag.td.sum() / max(ag.rec.sum(), 1)
+    exp = ag.rec * rate
+    resid_var = float((ag.td - exp).var())
+    mean_exp = float(exp.mean())
+    # Poisson accounts for `mean_exp` of the variance; the rest is what a
+    # multiplicative season shock has to supply.
+    extra = max(resid_var - mean_exp, 0.0)
+    sigma2 = np.log1p(extra / max(mean_exp ** 2, 1e-9))
+    return float(np.clip(np.sqrt(sigma2), 0.0, 0.6))
+
+
 def availability_history(seasons) -> pd.DataFrame:
     """Each player's own record of being on the field.
 

@@ -183,7 +183,9 @@ class GameSimulator:
             role_home: np.ndarray | None = None,
             role_away: np.ndarray | None = None,
             shock_home: dict | None = None,
-            shock_away: dict | None = None) -> dict:
+            shock_away: dict | None = None,
+            gl_home: np.ndarray | None = None,
+            gl_away: np.ndarray | None = None) -> dict:
         S, ph, rng = self.S, self.ph, self.rng
 
         teams = (away, home)
@@ -195,19 +197,26 @@ class GameSimulator:
         # Per-season team efficiency shocks: how far this offence lands from
         # its own prior in this particular simulated year.
         shocks = (shock_away or {}, shock_home or {})
+        # Goal-line role varies season to season independently of overall usage.
+        # This is the channel the missing touchdown dispersion enters through.
+        gls = (gl_away, gl_home)
 
         # Usage is fixed for the game once availability is known, so the injury
         # cascade is resolved once here rather than on every snap.
         cums, gl_cums, stats = [], [], []
-        for tm, av, role in zip(teams, avails, roles):
+        for tm, av, role, glf in zip(teams, avails, roles, gls):
             def base(v):
                 return v if role is None else v[None, :] * role
 
             tsh = _effective_shares(base(tm.target_share), av, tm.redistribute)
             rzsh = _effective_shares(base(tm.rz_target_share), av, tm.redistribute)
-            glsh = _effective_shares(base(tm.gl_target_share), av, tm.redistribute)
+            def gbase(v):
+                b = base(v)
+                return b if glf is None else (b if b.ndim == 2 else b[None, :]) * glf
+
+            glsh = _effective_shares(gbase(tm.gl_target_share), av, tm.redistribute)
             rsh = _effective_shares(base(tm.rush_share), av, tm.redistribute)
-            gsh = _effective_shares(base(tm.gl_share), av, tm.redistribute)
+            gsh = _effective_shares(gbase(tm.gl_share), av, tm.redistribute)
             cums.append((np.cumsum(tsh, axis=1), np.cumsum(rsh, axis=1),
                          np.cumsum(rzsh, axis=1), np.cumsum(glsh, axis=1)))
             gl_cums.append(np.cumsum(gsh, axis=1))
