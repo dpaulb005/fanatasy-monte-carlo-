@@ -114,6 +114,14 @@ def cmd_projections(args):
                          scoring_name=_scoring(args).name)
 
 
+def cmd_outliers(args):
+    """Top projected seasons, and where the model departs from last year."""
+    from .outliers import report
+    b, res = _load_bundle(), _load_result()
+    report(_frame(b, res, args), b, _scoring(args), top=args.top,
+           n_outliers=args.outliers)
+
+
 def cmd_team(args):
     """Full deep dive on one team."""
     from .team_report import report
@@ -228,6 +236,12 @@ def main(argv=None):
 
     t = common(sub.add_parser("teams", help="team wins, scoring and coaching"))
     t.set_defaults(func=cmd_teams)
+
+    o = common(sub.add_parser(
+        "outliers", help="top projected seasons and biggest movers vs last year"))
+    o.add_argument("--top", type=int, default=25)
+    o.add_argument("--outliers", type=int, default=15)
+    o.set_defaults(func=cmd_outliers)
 
     tr = common(sub.add_parser(
         "team", help="full deep dive on one team: identity, usage, stats, correlations"))

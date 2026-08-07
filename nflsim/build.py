@@ -269,6 +269,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
         qb_adot = np.zeros(n)
         qb_sack = np.zeros(n)
         qb_rsh = np.zeros(n)
+        conf_arr = np.zeros(n)
         inj_rate = np.zeros(n)
         inj_dur = np.zeros(n)
         gidx = np.zeros(n, dtype=int)
@@ -311,6 +312,21 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 same = float(team_frac_map.get((pid, team), 0.0))
                 ratio = move_penalty.get(pos, 0.7)
                 conf *= ratio + (1.0 - ratio) * same
+
+                # The depth chart is current information; a usage share is
+                # stale. When a player's history implies a far better job than
+                # the one his team has actually listed him for, believe the
+                # chart. Dameon Pierce carried a 0.257 share from his Houston
+                # lead-back years into a Philadelphia RB4 slot whose baseline
+                # is 0.029, and that single mismatch was enough to distort the
+                # whole backfield after normalisation.
+                key = "rshare" if pos == "RB" else "tshare"
+                own_now = r_own if pos == "RB" else t_own
+                ladder = [baselines.get((pos, k), {key: 0.01})[key]
+                          for k in range(1, SLOTS[pos] + 1)]
+                implied = int(np.argmin([abs(own_now - b) for b in ladder])) + 1
+                gap = max(int(r.depth_rank) - implied, 0)
+                conf /= 1.0 + 1.0 * gap
 
             if is_rookie:
                 rk = rookies.loc[pid]
@@ -384,6 +400,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
                 adot[i] = 0.0
                 tw[i] = rw[i] = gw[i] = 0.0
 
+            conf_arr[i] = conf
             age = _age(birth.get(pid))
             base_h = haz["hazard"].get(pos, 0.05)
             inj_rate[i] = base_h * pl.age_injury_multiplier(age, pos)
@@ -405,10 +422,15 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
             })
             gindex += 1
 
-        # Normalise weights into shares inside this offence.
-        tw = _norm(tw)
-        rw = _norm(rw)
-        gw = _norm(gw)
+        # Normalise weights into shares inside this offence. The budget is what
+        # is actually left after the quarterback's own carries, since the engine
+        # takes those off the top before distributing the rest.
+        qb1 = int(np.flatnonzero(pos_code == 0)[0]) if (pos_code == 0).any() else None
+        rush_budget = float(np.clip(1.0 - (qb_rsh[qb1] if qb1 is not None else 0.08),
+                                    0.55, 0.95))
+        tw = _confidence_norm(tw, conf_arr, 1.0)
+        rw = _confidence_norm(rw, conf_arr, rush_budget)
+        gw = _confidence_norm(gw, conf_arr, rush_budget)
         # Zone-specific target shares: the same players, reweighted by how the
         # league actually redistributes targets as the field shortens, then
         # renormalised so each zone is its own distribution.
@@ -531,6 +553,39 @@ def _norm(w: np.ndarray) -> np.ndarray:
     w = np.clip(np.nan_to_num(w, nan=0.0), 0.0, None)
     s = w.sum()
     return w / s if s > 0 else np.full_like(w, 1.0 / len(w))
+
+
+def _confidence_norm(w: np.ndarray, conf: np.ndarray, budget: float) -> np.ndarray:
+    """Normalise usage weights, charging the error to the least certain estimates.
+
+    Every weight is an estimate of a player's share of his team's work, but the
+    estimates are made independently and do not have to cohere: a backfield
+    holding two former lead backs will claim more carries than the team has to
+    give. Something must absorb the difference.
+
+    Plain proportional normalisation charges it to everyone equally, which is
+    the wrong answer -- it makes a player with four consistent seasons of
+    evidence pay the same penalty as a backup whose number came from a job he
+    held somewhere else three years ago. Philadelphia is the clean example: the
+    Eagles' backs over-subscribed their carry budget by a third, and Saquon
+    Barkley, whose share of the backfield has been 77 / 75 / 76 / 77 percent
+    across four seasons, was compressed to 53 to make room for it.
+
+    So the excess is removed in proportion to w * (1 - conf)^2, which
+    concentrates it on the estimates least able to defend themselves, and only
+    then is the vector scaled to sum to one.
+    """
+    w = np.clip(np.nan_to_num(w, nan=0.0), 0.0, None)
+    total = w.sum()
+    if total <= 0:
+        return np.full_like(w, 1.0 / len(w))
+
+    excess = total - budget
+    if excess > 0:
+        slack = w * (1.0 - np.clip(conf, 0.0, 1.0)) ** 2
+        if slack.sum() > 1e-9:
+            w = np.clip(w - excess * slack / slack.sum(), 0.0, None)
+    return _norm(w)
 
 
 def _pick(value, default, conf) -> float:
