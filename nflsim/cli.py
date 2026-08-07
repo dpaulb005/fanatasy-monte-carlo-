@@ -208,7 +208,7 @@ def cmd_validate(args):
 
 def cmd_backtest(args):
     """Project a season that has already happened, and score the projection."""
-    from .backtest import run_backtest, score
+    from .backtest import run_backtest, score, score_matched
     sc = _scoring(args)
     df = run_backtest(args.season, n_sims=args.sims, scoring=sc, seed=args.seed)
     # Persist before scoring: the run costs minutes, and a formatting problem
@@ -218,6 +218,7 @@ def cmd_backtest(args):
         df.to_csv(args.out, index=False)
         print(f"wrote {args.out}")
     score(df, sc, top_n=args.top)
+    score_matched(df, sc)
 
 
 # --------------------------------------------------------------------------

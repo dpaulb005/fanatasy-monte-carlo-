@@ -10,6 +10,20 @@ across ten thousand versions of the year.
 Nothing here is scraped from anyone else's projections. Every number is fit from primary
 data.
 
+**How this compares.** A survey of public and commercial systems found that play-level
+simulation does exist — [SaberSim](https://www.sabersim.com/how-it-works) builds games one
+play at a time, and Establish The Run runs 20,000 play-level sims per slate — but both are
+**DFS/weekly** products, and ETR's simulator is anchored to a separately-produced mean
+projection rather than generating it. Every public *season-long* fantasy system found
+(ESPN/Clay, PFF, RotoViz, BetIQ, FantasyPros, ffsimulator) projects box scores top-down:
+team volume → pass/rush split → usage shares → per-player efficiency. Several are partly
+subjective by their own description. The academic play-by-play simulators
+([NFLSimulatoR](https://github.com/rtelmore/NFLSimulatoR), Goldner's Markov model) are
+team-level and carry no player identity at all.
+
+So the accurate claim is narrower than "we simulate plays and others don't": **no public
+season-long fantasy projection system appears to simulate plays.**
+
 ---
 
 ## Why simulate plays instead of projecting box scores
@@ -254,7 +268,9 @@ Market sanity check: across the 52 games with published 2026 lines, mean simulat
 47.1 against a posted 45.6 — a 1.6-point disagreement from a model that never sees a line.
 
 **Out-of-sample backtest, 2025** (built on data through 2024, depth chart capped at
-preseason, 3,000 sims, top 200 projected):
+preseason, 3,000 sims, top 200 projected). Note this cohort is wider and pooled across
+positions, which flatters correlation — see the matched-cohort table below for the
+comparable numbers:
 
 | cohort | n | correlation | rank corr | MAE | bias |
 |---|---|---|---|---|---|

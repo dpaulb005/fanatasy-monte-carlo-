@@ -131,6 +131,60 @@ def _spearman(a, b) -> float:
     return float(np.corrcoef(ra, rb)[0, 1])
 
 
+# The cohort Fantasy Football Analytics has used to compare projection sources
+# since 2014 -- top 20 QB, top 20 TE, top 40 RB, top 40 WR, scored *within*
+# position. Matching it is the only way our numbers mean anything next to
+# theirs: R-squared is extremely sensitive to range restriction, so scoring a
+# wider cohort inflates correlation and drags MAE in the other direction. Our
+# own top-200 board is both wider and pooled across positions, which flatters
+# the correlation and penalises the error.
+FFA_COHORT = {"QB": 20, "TE": 20, "RB": 40, "WR": 40}
+
+
+def score_matched(df: pd.DataFrame, scoring: Scoring) -> None:
+    """Score on the public benchmark's cohort, for a like-for-like comparison."""
+    con = Console() if _RICH else None
+    season = df.attrs.get("season")
+
+    rows = []
+    for pos, n in FFA_COHORT.items():
+        sub = df[df.pos == pos].nlargest(n, "points")
+        if len(sub) < 5:
+            continue
+        r = np.corrcoef(sub.points, sub.actual)[0, 1]
+        rows.append([
+            pos, len(sub), f"{r:.3f}", f"{r*r*100:.1f}%",
+            f"{_spearman(sub.points, sub.actual):.3f}",
+            f"{(sub.points - sub.actual).abs().mean():.1f}",
+            f"{(sub.points - sub.actual).mean():+.1f}",
+        ])
+
+    title = (f"Backtest {season} on the public-benchmark cohort  ·  "
+             f"top 20 QB/TE, top 40 RB/WR, scored within position")
+    cols = [("pos", "left"), ("n", "right"), ("corr", "right"), ("R²", "right"),
+            ("rank corr", "right"), ("MAE", "right"), ("bias", "right")]
+    if _RICH:
+        t = Table(title=title, box=box.SIMPLE_HEAVY, header_style="bold",
+                  title_style="bold")
+        for c, j in cols:
+            t.add_column(c, justify=j)
+        for rw in rows:
+            t.add_row(*rw)
+        con.print(t)
+        con.print(
+            "[grey58]Comparable published figures (Fantasy Football Analytics, "
+            "best single source, season-long): QB R² 8.9%, RB 19.1%, WR 8.9%, "
+            "TE 9.0%; season MAE QB 61.0, RB 52.2. Their R² is a single season's "
+            "best source and their MAE an eleven-season average, so neither is a "
+            "clean target -- but MAE is the honest weak spot and is reported here "
+            "rather than buried under a wider cohort.[/]"
+        )
+    else:
+        print(f"\n{title}")
+        for rw in rows:
+            print("  " + "  ".join(rw))
+
+
 def score(df: pd.DataFrame, scoring: Scoring, top_n: int = 200) -> None:
     """Report accuracy overall, by position, and against a naive baseline."""
     con = Console() if _RICH else None
