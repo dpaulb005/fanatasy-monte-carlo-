@@ -164,13 +164,21 @@ def _redistribution(pos_arr: np.ndarray, depth_arr: np.ndarray) -> np.ndarray:
     return R
 
 
-def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = True) -> Bundle:
+def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = True,
+          as_of: str | None = None) -> Bundle:
+    """Fit the whole model for `season`.
+
+    `as_of` caps the depth chart snapshot, which is the one input that can leak
+    the future in a backtest. Every other fit is already bounded by `season`.
+    """
     def log(msg):
         if verbose:
             print(msg, flush=True)
 
     log("loading play-by-play ...")
     pbp = data.play_by_play(pbp_seasons)
+    # Nothing from the season being projected may inform the projection.
+    pbp = pbp[pbp.season < season]
     games = data.games()
 
     log("fitting league physics ...")
@@ -197,7 +205,7 @@ def build(season: int = TARGET_SEASON, pbp_seasons=PBP_SEASONS, verbose: bool = 
     curves = pl.fit_rookie_curves(season)
 
     log("loading depth charts and rosters ...")
-    depth = pl.current_depth(season)
+    depth = pl.current_depth(season, as_of=as_of)
     roster = data.rosters(season)
     rookies = pl.rookie_priors(season, curves, depth)
     rookies = rookies.set_index("gsis_id") if not rookies.empty else pd.DataFrame()

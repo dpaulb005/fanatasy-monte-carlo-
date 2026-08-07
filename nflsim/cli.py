@@ -151,6 +151,18 @@ def cmd_validate(args):
     run_validation(_load_bundle(), _load_result(), _scoring(args))
 
 
+def cmd_backtest(args):
+    """Project a season that has already happened, and score the projection."""
+    from .backtest import run_backtest, score
+    sc = _scoring(args)
+    df = run_backtest(args.season, n_sims=args.sims, scoring=sc, seed=args.seed)
+    score(df, sc, top_n=args.top)
+    if args.out:
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(args.out, index=False)
+        print(f"wrote {args.out}")
+
+
 # --------------------------------------------------------------------------
 
 def main(argv=None):
@@ -205,6 +217,15 @@ def main(argv=None):
 
     v = common(sub.add_parser("validate", help="check the engine against reality"))
     v.set_defaults(func=cmd_validate)
+
+    bt = common(sub.add_parser(
+        "backtest", help="project a past season out-of-sample and score it"))
+    bt.add_argument("--season", type=int, default=TARGET_SEASON - 1)
+    bt.add_argument("--sims", type=int, default=2000)
+    bt.add_argument("--seed", type=int, default=11)
+    bt.add_argument("--top", type=int, default=200)
+    bt.add_argument("--out", default=None, help="write the scored table to CSV")
+    bt.set_defaults(func=cmd_backtest)
 
     args = p.parse_args(argv)
     args.func(args)

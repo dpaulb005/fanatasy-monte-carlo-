@@ -83,28 +83,53 @@ SKILL_ABB = {"QB": "QB", "RB": "RB", "TE": "TE"}
 WR_ABB = {"WR", "LWR", "RWR", "SWR"}
 
 
-def current_depth(season: int) -> pd.DataFrame:
-    """Latest published offensive depth chart, one row per player-position."""
+def current_depth(season: int, as_of: str | None = None) -> pd.DataFrame:
+    """Offensive depth chart, one row per player-position, in depth order.
+
+    `as_of` caps the snapshot at a date. Projecting the coming season wants the
+    most recent chart available, but a *backtest* must not see one published
+    after the season it is predicting -- that would leak the answer, since a
+    December depth chart already encodes who turned out to be good.
+
+    Two source schemas are handled. From 2025 the feed is timestamped snapshots
+    tagged by personnel package; before that it is week-by-week rows tagged by
+    formation.
+    """
     dc = data.depth_charts(season)
-    dc = dc[dc.pos_grp == OFF_GROUP]
-    latest = dc.dt.max()
-    dc = dc[dc.dt == latest].copy()
 
-    def norm(abb: str) -> str | None:
-        if abb in WR_ABB:
-            return "WR"
-        return SKILL_ABB.get(abb)
+    if "pos_grp" in dc.columns:                       # 2025+ timestamped feed
+        dc = dc[dc.pos_grp == OFF_GROUP].copy()
+        if as_of is not None:
+            capped = dc[dc.dt <= as_of]
+            # Fall back to the earliest available chart if the cap precedes the
+            # whole feed, rather than silently returning nothing.
+            dc = capped if len(capped) else dc[dc.dt == dc.dt.min()]
+        dc = dc[dc.dt == dc.dt.max()].copy()
 
-    dc["pos"] = dc.pos_abb.map(norm)
-    dc = dc[dc.pos.notna() & dc.gsis_id.notna()]
-    # A player can appear at several WR alignments; keep his best rank.
+        def norm(abb):
+            return "WR" if abb in WR_ABB else SKILL_ABB.get(abb)
+
+        dc["pos"] = dc.pos_abb.map(norm)
+        dc["rank_col"] = dc.pos_rank
+    else:                                             # pre-2025 weekly feed
+        dc = dc[(dc.game_type == "REG") & (dc.formation == "Offense")].copy()
+        first_week = dc.week.min()
+        dc = dc[dc.week == first_week]
+        dc["team"] = dc.club_code
+        dc["player_name"] = dc.full_name
+        dc["pos"] = dc.position.where(dc.position.isin(FANTASY_POSITIONS))
+        dc["rank_col"] = pd.to_numeric(dc.depth_team, errors="coerce")
+
+    dc = dc[dc.pos.notna() & dc.gsis_id.notna() & dc.rank_col.notna()]
+    # A player can appear at several alignments; keep his best listed rank.
     dc = (
-        dc.sort_values("pos_rank")
+        dc.sort_values("rank_col")
         .groupby(["team", "pos", "gsis_id"], as_index=False)
-        .first()[["team", "pos", "gsis_id", "player_name", "pos_rank"]]
+        .first()[["team", "pos", "gsis_id", "player_name", "rank_col"]]
     )
     # Re-rank within team/position so ranks are dense and ordered.
-    dc["depth_rank"] = dc.groupby(["team", "pos"]).pos_rank.rank(method="first").astype(int)
+    dc["pos_rank"] = dc.rank_col
+    dc["depth_rank"] = dc.groupby(["team", "pos"]).rank_col.rank(method="first").astype(int)
     return dc
 
 
