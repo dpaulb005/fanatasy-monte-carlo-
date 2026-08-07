@@ -104,17 +104,31 @@ listed so the next session does not reinvent them.
    rank baselines pull low-usage WRs up: the WR baseline ladder is fairly flat
    (.230/.151/.098/.058/...) and a WR5 blended toward .032 may be too generous.
 
-3. **Interval calibration overshoots.** Conformal fitted on 2024 and applied to
+3. **Touchdown dispersion is 56% closed, and the rest is diagnosed.** The
+   engine's scoring was near-Poisson given volume (dispersion ratio 0.976)
+   where real receiving touchdowns sit at 1.122. A red zone scoring shock
+   (sigma 0.31, fit from data and scaled by the 71% of touchdowns that
+   originate inside the twenty) brought it to 1.058 with mean scoring
+   unchanged. The remaining gap has two known causes, neither yet addressed:
+   shares are renormalised within a team, so one player's red zone gain is
+   another's loss and *team* red zone efficiency cannot vary; and the 29% of
+   touchdowns scored from outside the twenty carry no extra variance at all.
+   A team-level red zone conversion shock -- the same class as the existing
+   team pass/rush efficiency shocks -- is the obvious next move. Do not simply
+   raise sigma to hit the number; that is tuning, and the mechanism is the
+   thing that is incomplete.
+
+4. **Interval calibration overshoots.** Conformal fitted on 2024 and applied to
    2025 takes the 80% band from 71.0% coverage to 90.0% — it removes the
    overconfidence but overcorrects into conservatism, widening mean interval
    width 161 → 250. The cause is that the *degree* of miscalibration varies year
    to year. Fix: pool 2021–24 as the calibration set (see `DATA_WANTED.md` §5).
 
-4. **Quarterbacks are the weakest position** (backtest r = .342–.416). Their
+5. **Quarterbacks are the weakest position** (backtest r = .342–.416). Their
    scoring is almost entirely downstream of how well the offence plays, and the
    model has less independent signal there than it has on usage share.
 
-5. **College data for rookies.** Blocked here. See `DATA_WANTED.md` §3.
+6. **College data for rookies.** Blocked here. See `DATA_WANTED.md` §3.
 
 ---
 
