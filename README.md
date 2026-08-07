@@ -231,6 +231,51 @@ Two caveats are reported rather than hidden: rosters are read at end-of-season s
 player traded in October is credited to his final team; and production by players never
 carried on a depth chart is out of scope, which is why a coverage percentage is printed.
 
+### Measured results
+
+Ten thousand simulated 2026 seasons, against the recency-weighted 2021–25 league:
+
+| metric | simulated | 2021–25 weighted | error |
+|---|---|---|---|
+| plays / team-game | 62.25 | 61.73 | +0.8% |
+| points / team-game | 22.98 | 22.56 | +1.9% |
+| pass attempts / team-game | 33.14 | 33.23 | −0.3% |
+| completion % | 64.58 | 64.28 | +0.5% |
+| pass yards / team-game | 245.5 | 233.5 | **+5.2%** |
+| yards / carry | 4.35 | 4.51 | −3.5% |
+| sack rate % | 6.96 | 6.46 | **+7.8%** |
+| pass TD / team-game | 1.51 | 1.46 | +3.7% |
+| rush TD / team-game | 0.98 | 0.92 | +6.9% |
+| INT / team-game | 0.75 | 0.75 | +0.6% |
+
+Market sanity check: across the 52 games with published 2026 lines, mean simulated total
+47.1 against a posted 45.6 — a 1.6-point disagreement from a model that never sees a line.
+
+**Out-of-sample backtest, 2025** (built on data through 2024, depth chart capped at
+preseason, 3,000 sims, top 200 projected):
+
+| cohort | n | correlation | rank corr | MAE | bias |
+|---|---|---|---|---|---|
+| all positions | 200 | **0.599** | 0.583 | 61.3 | −4.7 |
+| RB | 59 | 0.635 | 0.611 | 70.2 | −3.6 |
+| WR | 80 | 0.581 | 0.571 | 59.3 | +2.0 |
+| TE | 29 | 0.485 | 0.248 | 40.5 | −22.3 |
+| QB | 32 | 0.342 | 0.254 | 68.7 | −7.3 |
+
+96.6% of actual league-wide fantasy production was on a modelled depth chart. The largest
+misses are the ones you'd expect and could not have known: James Conner and Tyreek Hill
+over-projected (both got hurt); McCaffrey, Puka Nacua and Drake Maye under-projected (all
+broke out).
+
+**Intervals are overconfident.** The stated p10–p90 band contained the actual 2025 outcome
+67.5% of the time against a nominal 80%; p25–p75 caught 36.5% against 50%. Real floors and
+ceilings are wider than the ones printed. Two rounds of added variance — season-level role
+volatility and team efficiency shocks, both fit from data rather than assumed — closed most
+of the gap in the *point* projections but only ~1 point of the coverage gap. Closing the
+rest by inflating variance until the number hit 80% would be fitting a distribution
+parameter to a single backtest season, so it is reported rather than tuned away. Treat the
+percentile columns as ordering information, not as calibrated probabilities.
+
 ### One correction worth naming
 
 An earlier version of the cohort check compared each position's *highest projected mean*
@@ -263,6 +308,14 @@ like-for-like quantity.
 ## Known limitations
 
 Stated plainly, because a projection you cannot audit is worth less than one you can.
+
+- **Intervals are too narrow** — see the measured coverage above. The biggest known gap.
+- **Quarterbacks are the weakest position** (backtest r = 0.342, and the top-12 cohort
+  projects ~10% light). QB scoring is almost entirely a function of how well an offence
+  plays, and the model has less independent signal there than it does on usage share.
+- **Tight end rank correlation is poor** (0.248) even though the level is close. The
+  position is thin and volatile; small share differences swing the ordering.
+- **Pass yards run ~5% high and sack rate ~8% high** against the fitted era.
 
 - **Two-point conversions** are simulated for team scoring but not attributed to
   individual players. Worth roughly 2 points a season to an elite scorer.
