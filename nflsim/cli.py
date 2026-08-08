@@ -3,6 +3,8 @@
     python -m nflsim build                     fit the model, cache the bundle
     python -m nflsim simulate --sims 10000     run seasons, cache the results
     python -m nflsim board --top 80            print the draft board
+    python -m nflsim draft --interactive       mock draft against ADP bots
+    python -m nflsim adp --save espn.csv       fetch and freeze the ADP board
     python -m nflsim projections --pos WR      per-position projections
     python -m nflsim teams                     team wins, scoring, coaching
     python -m nflsim export --out projections  write CSVs
@@ -13,6 +15,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import pickle
 import sys
 from pathlib import Path
@@ -108,6 +111,141 @@ def cmd_simulate(args):
     np.savez(tmp, **payload)
     tmp.replace(RESULT)
     print(f"saved {args.sims:,} simulated seasons to {RESULT}")
+
+
+def _adp_pool(args, bundle, proj):
+    """The board the room drafts from, aligned to the model's players."""
+    from . import adp as adp_mod
+    from . import draft_ui
+
+    src = "csv" if args.adp else args.source
+    table = adp_mod.load(source=args.source, season=TARGET_SEASON,
+                         path=args.adp, scoring_name=_scoring(args).name)
+    aligned, unmatched = adp_mod.attach(table, bundle.player_table)
+    pool = adp_mod.fill_undrafted(aligned, proj.overall_rank)
+    # `table["asof"]`, not `table.asof`: DataFrame.asof is a method, and
+    # attribute access finds it before the column.
+    asof = str(table["asof"].iloc[0]) if "asof" in table else None
+    draft_ui.show_source_note(src, len(table), len(unmatched), asof)
+    if len(unmatched):
+        # Loud, because an unmatched name is a player the bots can never take
+        # and you can never draft -- a silent hole in the board.
+        top = unmatched.nsmallest(6, "adp")
+        print("  unmatched on the board: " + ", ".join(
+            f"{r.player} ({r.pos}, ADP {r.adp:.0f})" for _, r in top.iterrows())
+            + (f" and {len(unmatched) - len(top)} more" if len(unmatched) > len(top) else ""),
+            file=sys.stderr)
+    return pool
+
+
+def cmd_adp(args):
+    """Fetch a board and optionally freeze it to CSV."""
+    from . import adp as adp_mod
+    table = adp_mod.load(source=args.source, season=TARGET_SEASON,
+                         path=args.adp, scoring_name=_scoring(args).name)
+    if args.save:
+        table.to_csv(args.save, index=False)
+        print(f"wrote {len(table)} rows to {args.save}")
+    cols = [c for c in ("adp", "player", "pos", "team", "adp_raw", "adp_sd")
+            if c in table]
+    print(table[cols].head(args.top).to_string(index=False))
+
+
+def _draft_rooms(args, bundle, res, proj, cfg, pool, on_clock):
+    """Repeat the draft in many rooms and report the spread.
+
+    One draft is one sample from a very noisy process: the same strategy in the
+    same seat gets a different board depending on how eleven other people's
+    perceptions happened to fall. Reporting the title odds from a single room
+    as if it measured a strategy is the mistake this exists to prevent, so the
+    comparison is made across rooms and the run-to-run spread is printed
+    alongside the mean.
+    """
+    from . import draft as draft_mod
+
+    seat = cfg.seat - 1
+    rows = []
+    for i in range(args.rooms):
+        c = replace(cfg, seed=cfg.seed + i)
+        picks = draft_mod.run_draft(pool, c, on_clock=on_clock)
+        table = draft_mod.grade(picks, res, bundle, _scoring(args), c)
+        mine = table[table.team_idx == seat].iloc[0]
+        rows.append({"room": i + 1, "p_title": mine.p_title,
+                     "p_playoff": mine.p_playoff, "points": mine.points,
+                     "finish": mine.mean_finish})
+    df = pd.DataFrame(rows)
+    strat = "interactive" if args.interactive else args.strategy
+    print(f"\n{args.rooms} draft rooms  ·  seat {cfg.seat}  ·  strategy "
+          f"{strat}  ·  {res['n_sims']:,} simulated seasons each")
+    for col, label, pct in (("p_title", "title", True),
+                            ("p_playoff", "playoff", True),
+                            ("finish", "mean finish", False),
+                            ("points", "starter points", False)):
+        v = df[col].to_numpy()
+        scale, suffix = (100.0, "%") if pct else (1.0, "")
+        # Standard error over rooms, which is the quantity a single-room
+        # readout hides entirely.
+        se = v.std(ddof=1) / np.sqrt(len(v)) * scale
+        print(f"  {label:>15}: {v.mean()*scale:7.2f}{suffix}"
+              f"  ±{se:.2f}   (range {v.min()*scale:.2f}-{v.max()*scale:.2f})")
+    if args.out:
+        df.to_csv(args.out, index=False)
+        print(f"wrote {args.out}")
+
+
+def cmd_draft(args):
+    from . import draft as draft_mod
+    from . import draft_ui
+
+    b, res = _load_bundle(), _load_result()
+    proj = _frame(b, res, args)
+    lg = _league(args)
+    cfg = draft_mod.DraftConfig(league=lg, rounds=args.rounds, seat=args.seat,
+                                seed=args.seed)
+    pool = _adp_pool(args, b, proj)
+
+    engine = draft_mod.ValueEngine(res, b, _scoring(args), lg)
+
+    def take(state, gindex):
+        return int(np.flatnonzero(state.pool.index == gindex)[0])
+
+    on_clock = None
+    if args.interactive:
+        on_clock = lambda state: draft_ui.prompt(state, proj, engine)  # noqa: E731
+    elif args.strategy == "value":
+        # Draft the seat that maximises expected starting lineup points, not
+        # the one that maximises value over replacement. The difference is
+        # roster construction: VOR will happily take a sixth running back
+        # because he is the best player left, and marginal value will not,
+        # because he cannot get into the lineup.
+        on_clock = lambda state: take(state, engine.gains(state, proj).index[0])  # noqa: E731
+    elif args.strategy == "vor":
+        # The naive control: best player left by value over replacement,
+        # ignoring what the roster already has.
+        def on_clock(state):
+            return take(state, proj.reindex(state.available().index).vor.idxmax())
+
+    if args.rooms > 1:
+        return _draft_rooms(args, b, res, proj, cfg, pool, on_clock)
+
+    picks = draft_mod.run_draft(pool, cfg, on_clock=on_clock)
+    picks = draft_mod.pick_value(picks, proj)
+    table = draft_mod.grade(picks, res, b, _scoring(args), cfg)
+
+    print()
+    draft_ui.show_league(table, res["n_sims"])
+    draft_ui.league_note(res["n_sims"],
+                         None if args.interactive else args.strategy)
+    you = cfg.seat - 1
+    draft_ui.show_roster(picks, you, proj,
+                         f"Your roster  ·  seat {cfg.seat} of {lg.teams}")
+    if args.show_team is not None:
+        draft_ui.show_roster(picks, args.show_team - 1, proj,
+                             f"Team {args.show_team}")
+    if args.out:
+        picks.to_csv(args.out, index=False)
+        table.to_csv(args.out.replace(".csv", "") + "_league.csv", index=False)
+        print(f"wrote {args.out}")
 
 
 def cmd_board(args):
@@ -354,6 +492,40 @@ def main(argv=None):
     c.add_argument("a")
     c.add_argument("b")
     c.set_defaults(func=cmd_compare)
+
+    def with_adp(sp):
+        sp.add_argument("--source", default="espn",
+                        choices=("espn", "fantasypros"),
+                        help="where the market board comes from")
+        sp.add_argument("--adp", default=None,
+                        help="use this CSV instead of fetching (overrides --source)")
+        return sp
+
+    dr = with_adp(common(sub.add_parser(
+        "draft", help="snake draft against bots that follow ADP")))
+    dr.add_argument("--rounds", type=int, default=15)
+    dr.add_argument("--seat", type=int, default=1, help="your draft slot")
+    dr.add_argument("--seed", type=int, default=SimConfig.seed)
+    dr.add_argument("--interactive", action="store_true",
+                    help="draft your own seat from the terminal")
+    dr.add_argument("--strategy", default="value",
+                    choices=("value", "vor", "adp"),
+                    help="how your seat picks when not interactive: marginal "
+                         "lineup value, raw VOR, or the market board")
+    dr.add_argument("--rooms", type=int, default=1,
+                    help="repeat the draft in N rooms and report the spread "
+                         "instead of one room's board")
+    dr.add_argument("--show-team", type=int, default=None,
+                    help="also print this team's roster, 1-based")
+    dr.add_argument("--out", default=None, help="write the picks to CSV")
+    dr.set_defaults(func=cmd_draft)
+
+    ad = with_adp(common(sub.add_parser(
+        "adp", help="show the market board the draft bots use")))
+    ad.add_argument("--top", type=int, default=40)
+    ad.add_argument("--save", default=None,
+                    help="freeze the fetched board to this CSV")
+    ad.set_defaults(func=cmd_adp)
 
     v = common(sub.add_parser("validate", help="check the engine against reality"))
     v.set_defaults(func=cmd_validate)

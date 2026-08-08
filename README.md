@@ -61,6 +61,8 @@ python -m nflsim outliers               # top seasons + biggest movers vs last y
 python -m nflsim validate               # check the engine against reality
 python -m nflsim export --out out/      # CSV + parquet
 python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context comparisons
+
+python -m nflsim draft --interactive    # mock draft against bots that follow ESPN ADP
 ```
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
@@ -77,6 +79,105 @@ sensitivity estimates, not isolated player effects or causal claims. Use at
 least 5,000 simulations for decision-grade tail comparisons. The
 ongoing research and promotion gates are documented in
 [`docs/RESEARCH_LOOP.md`](docs/RESEARCH_LOOP.md).
+
+---
+
+## The draft room
+
+`draft` puts you in a 12-team snake draft against eleven bots that take players
+off the **ESPN ADP board**, and then scores every finished roster against the
+same simulated seasons the rest of the project produces.
+
+```bash
+python -m nflsim adp --top 40                    # see the market board
+python -m nflsim adp --save espn_adp.csv         # freeze it
+
+python -m nflsim draft --interactive --seat 5    # you pick, they follow ADP
+python -m nflsim draft --seat 5 --out picks.csv  # auto-draft your seat, export
+python -m nflsim draft --adp espn_adp.csv        # use a frozen or exported board
+python -m nflsim draft --source fantasypros      # expert consensus instead of ADP
+```
+
+**The bots.** Each drafter carries his own noisy read of the consensus board,
+drawn once and kept for the whole draft — a manager who is high on somebody in
+round two is still high on him in round nine. Deviation grows with pick number,
+so the first round is near chalk and round twelve is nearly random. On top of
+that sit roster needs (which rise sharply as the picks left approach the slots
+still empty), positional runs, hard caps per position, and a hard constraint in
+the closing rounds so nobody finishes without a tight end. Where the source
+publishes expert disagreement, that becomes per-player pick noise: players the
+market cannot agree on are exactly the ones whose draft slot is unpredictable.
+
+**Marginal lineup value.** The on-the-clock board is not ordered by VOR. It is
+ordered by how many points a player adds to *your* expected starting lineup,
+given who you have already taken — the roster is first padded with
+replacement-level players in every unfilled slot, so the comparison is against
+what the slot would otherwise get rather than against nothing. Value over
+replacement answers "how good is this player", which is the wrong question once
+you already have two running backs: the third only plays when the flex wants
+him. The diminishing return falls out of the arithmetic instead of being
+asserted by a positional rule. `--strategy vor` is the naive control, and it
+drafts six running backs.
+
+**`Wait`** is the probability a player survives to your next pick, from the same
+noise the bots use. It ignores the need and run bonuses, which only ever pull a
+position forward, so it is an upper bound.
+
+**Grading.** Every roster is scored on the same replications, so the finish
+inside a season is a real head-to-head and title odds mean something. Two
+consequences worth knowing: lineups are chosen after the season is known
+(best-ball), which pays depth more than a manager setting a lineup each Sunday
+ever collects; and because rosters share replications, a team stacked on one
+offence swings together — visible in its range, invisible in its mean.
+
+The caveat printed under the league table is the important one. A seat drafting
+this model's board is then graded by this model. Read the gap between seats, not
+its level.
+
+**One room measures nothing.** `--rooms N` repeats the draft against N fresh
+draws of eleven opponents and reports the spread, which is the only way to
+compare strategies:
+
+```bash
+python -m nflsim draft --strategy value --rooms 24
+```
+
+Across 24 rooms in seat 5 (Full PPR, 3,000 seasons each, consensus board of
+2026-08-07):
+
+| your seat's strategy | title odds | mean finish | worst room |
+|---|---:|---:|---:|
+| `adp` — draft the market board, like the bots | 7.08% ± 1.04 | 6.64 | 1.1% |
+| `vor` — best value over replacement left | 58.58% ± 2.13 | 2.00 | 25.7% |
+| `value` — best marginal lineup value | 63.44% ± 1.06 | 1.82 | 54.8% |
+
+The `adp` row is the control: a seat drafting the same board as everyone else
+lands at 7.1% against the 8.3% a twelve-team league gives by construction, so
+the machinery is not manufacturing an edge. Marginal value's 4.9-point gain over
+raw VOR is right at two sigma and not settled — but its run-to-run spread is half
+the size, and its worst room out of 24 was 55% where VOR's was 26%. VOR
+occasionally drafts a roster it cannot start; marginal value does not. See
+[`docs/DRAFT.md`](docs/DRAFT.md), which also records the flex-padding bug this
+comparison caught.
+
+### ADP sources
+
+| `--source` | What it is | Notes |
+|---|---|---|
+| `espn` (default) | ESPN's live `averageDraftPosition` from real drafts | Needs network access to `fantasy.espn.com` |
+| `fantasypros` | Expert consensus rank, via the DynastyProcess mirror | Reachable from GitHub-only networks; a rank is not a draft position, and the header says so |
+| `--adp FILE` | Any CSV you exported | Column names are matched loosely — `Overall`/`ADP`/`Rank`, `Player`/`Name`, `RB2`-style positions all work |
+
+Every source is re-ranked into dense pick numbers over the four scoring
+positions, keeping the original value as `adp_raw`. ESPN's raw ADP counts
+kickers and defences, so pick 100 on their board is not pick 100 in a league
+that does not roster them. Players the engine projects but the market has not
+priced are placed below the board in the model's own order — the late rounds of
+a real draft are full of them. Board entries the model does not carry are
+reported rather than dropped, because a silent hole is a player nobody in the
+room can draft.
+
+---
 
 Scoring and league shape are flags, so any format is one argument away:
 
@@ -397,6 +498,9 @@ nflsim/
   engine.py     the play-by-play engine
   season.py     availability draws and the season loop
   analysis.py   scoring, projections, VOR, tiers
+  adp.py        the market board: ESPN, expert consensus, or your own CSV
+  draft.py      the draft room, marginal lineup value, roster grading
+  draft_ui.py   the clock, the board, the results
   board.py      terminal rendering
   validate.py   checks against reality and the market
   cli.py        command line interface

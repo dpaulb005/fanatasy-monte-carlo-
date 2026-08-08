@@ -34,7 +34,32 @@ projected stat lines.
 
 ### 2. Expert consensus rankings and ADP
 
-You offered these; here is exactly what is useful and why.
+**There is now a one-command way to fetch the ESPN half of this.** From any
+machine that can reach `fantasy.espn.com`:
+
+```bash
+python -m nflsim adp --source espn --save data/external/espn_adp.csv
+```
+
+That hits ESPN's public fantasy API (`kona_player_info`) and writes the board
+the draft simulator uses. Commit the CSV and it works everywhere:
+
+```bash
+python -m nflsim draft --adp data/external/espn_adp.csv --interactive
+```
+
+This environment cannot do it — the proxy answers 403 to CONNECT for
+`lm-api-reads.fantasy.espn.com`, and for FantasyPros, Sleeper and Yahoo too.
+Only GitHub is reachable, which is why the working fallback is FantasyPros ECR
+via the DynastyProcess mirror on `raw.githubusercontent.com`. That is a
+*ranking*, not a draft position, and the two differ systematically: rankers are
+less swayed by name recognition than drafters are. Real ADP is the thing worth
+fetching.
+
+Re-fetch weekly through August — ADP moves fastest in the two weeks before the
+season, which is exactly when the practice drafts matter.
+
+Beyond ESPN, here is what else is useful and why.
 
 - **ADP** (Underdog, Sleeper, ESPN, Yahoo, NFFC), as player + positional ADP +
   overall ADP + date. Underdog and NFFC are best-quality because real money.
