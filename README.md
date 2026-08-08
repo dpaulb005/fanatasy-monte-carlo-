@@ -64,6 +64,7 @@ python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context 
 
 python -m nflsim draft --interactive    # mock draft against bots that follow ESPN ADP
 python -m nflsim room --pos RB          # whose usage rests on injuries around him
+python -m nflsim chart --top 30         # PNG of the top of the board
 ```
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
@@ -526,6 +527,7 @@ nflsim/
   engine.py     the play-by-play engine
   season.py     availability draws and the season loop
   analysis.py   scoring, projections, VOR, tiers
+  chart.py      the board as a static distribution plot
   room.py       whether a player's usage was earned or vacated
   adp.py        the market board: ESPN, expert consensus, or your own CSV
   draft.py      the draft room, marginal lineup value, roster grading

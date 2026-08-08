@@ -248,6 +248,21 @@ def cmd_draft(args):
         print(f"wrote {args.out}")
 
 
+def cmd_chart(args):
+    """Render the top of the board to a PNG."""
+    from . import chart as chart_mod
+    b, res = _load_bundle(), _load_result()
+    df = _frame(b, res, args)
+    if args.pos:
+        want = {p.strip().upper() for p in args.pos.split(",")}
+        df = df[df.pos.isin(want)]
+    lg = _league(args)
+    out = chart_mod.top_players(
+        df, args.out, n=args.top, scoring_name=_scoring(args).name,
+        n_sims=res["n_sims"], league_desc=f"{lg.teams}-team", by=args.by)
+    print(f"wrote {out}")
+
+
 def cmd_room(args):
     """Whose fitted usage leans on somebody else being hurt."""
     from . import room as room_mod
@@ -598,6 +613,14 @@ def main(argv=None):
     ad.add_argument("--save", default=None,
                     help="freeze the fetched board to this CSV")
     ad.set_defaults(func=cmd_adp)
+
+    ch = common(sub.add_parser("chart", help="render the board to a PNG"))
+    ch.add_argument("--top", type=int, default=30)
+    ch.add_argument("--pos", default=None, help="e.g. RB or RB,WR")
+    ch.add_argument("--by", default="vor", choices=("vor", "points"),
+                    help="what to rank by")
+    ch.add_argument("--out", default="top-players.png")
+    ch.set_defaults(func=cmd_chart)
 
     rm = common(sub.add_parser(
         "room", help="whose fitted usage rests on injuries around him"))
