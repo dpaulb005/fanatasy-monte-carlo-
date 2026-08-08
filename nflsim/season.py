@@ -129,6 +129,7 @@ WEEK_QUANTILES = (10, 25, 50, 75, 90)
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
                use_injuries: bool = True, use_role_variance: bool = True,
                use_team_shocks: bool | None = None,
+               use_scoring_shocks: bool = True,
                scoring=None, weekly: bool = True) -> dict:
     """Simulate the full regular season `n_sims` times.
 
@@ -169,13 +170,18 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     drawn_avail = draw_availability(bundle, n_sims, availability_rng, weeks)
     drawn_role = draw_role_factors(bundle, n_sims, role_rng, enabled=True)
     drawn_shocks = draw_team_shocks(bundle, n_sims, shock_rng, enabled=True)
-    drawn_gl = draw_scoring_shocks(bundle, n_sims, scoring_rng, enabled=True)
+    drawn_scoring = draw_scoring_shocks(bundle, n_sims, scoring_rng, enabled=True)
     avail = (drawn_avail if use_injuries else
              np.ones((weeks, n_sims, P), dtype=np.float32))
     role = (drawn_role if use_role_variance else
             np.ones((n_sims, P), dtype=np.float32))
     shocks = drawn_shocks if use_team_shocks else {team: {} for team in bundle.teams}
-    gl_role = (drawn_gl if use_role_variance else
+    # The scoring shock gets its own switch rather than riding on role
+    # variance. They are separate mechanisms -- one moves a player's share of
+    # the work, the other moves how often that work reaches the end zone -- and
+    # a factor experiment that cannot turn them off independently cannot say
+    # which of them a change in the tails came from.
+    gl_role = (drawn_scoring if use_scoring_shocks else
                np.ones((n_sims, P), dtype=np.float32))
 
     totals = np.zeros((NSTAT, n_sims, P), dtype=np.float32)
