@@ -63,6 +63,7 @@ python -m nflsim export --out out/      # CSV + parquet
 python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context comparisons
 
 python -m nflsim draft --interactive    # mock draft against bots that follow ESPN ADP
+python -m nflsim room --pos RB          # whose usage rests on injuries around him
 ```
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
@@ -79,6 +80,33 @@ sensitivity estimates, not isolated player effects or causal claims. Use at
 least 5,000 simulations for decision-grade tail comparisons. The
 ongoing research and promotion gates are documented in
 [`docs/RESEARCH_LOOP.md`](docs/RESEARCH_LOOP.md).
+
+---
+
+## Vacated usage
+
+`fit_usage` pools every game a player appeared in and cannot tell a carry taken
+with the room whole from a carry that existed because the man beside him was
+hurt. `room` measures the difference, per player:
+
+```bash
+python -m nflsim room --pos RB --top 20
+```
+
+Across 2022–25 a second running back's share nearly doubles when the man ahead
+of him is out (10.4% → 18.5%), and about 9% of the average back's fitted
+baseline is work somebody else vacated. Tyrone Tracy is the clearest lead-back
+case: 19.5% with the room whole against 31.6% without it, and the model fits
+28.1% — so roughly 30% of his baseline is somebody else's absence.
+
+**It is a flag, not a correction.** Fitting shares on whole-room games only was
+tested against the 2025 backtest and the correlation with projection error came
+out at −0.02 overall; the RB gradient runs the right way but sits under one
+sigma. Share normalisation and confidence shrinkage already absorb most of the
+contamination. Under this project's promotion gate that is not enough to change
+a default, so nothing is subtracted from anyone. See [`docs/ROOM.md`](docs/ROOM.md)
+for the test, the numbers, and the two ways the measurement itself went wrong
+first.
 
 ---
 
@@ -498,6 +526,7 @@ nflsim/
   engine.py     the play-by-play engine
   season.py     availability draws and the season loop
   analysis.py   scoring, projections, VOR, tiers
+  room.py       whether a player's usage was earned or vacated
   adp.py        the market board: ESPN, expert consensus, or your own CSV
   draft.py      the draft room, marginal lineup value, roster grading
   draft_ui.py   the clock, the board, the results

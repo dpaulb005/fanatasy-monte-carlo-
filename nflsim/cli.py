@@ -248,6 +248,78 @@ def cmd_draft(args):
         print(f"wrote {args.out}")
 
 
+def cmd_room(args):
+    """Whose fitted usage leans on somebody else being hurt."""
+    from . import room as room_mod
+    from .board import _RICH, _console
+
+    seasons = range(TARGET_SEASON - args.lookback, TARGET_SEASON)
+    split = room_mod.usage_split(seasons, target=TARGET_SEASON)
+    if args.team:
+        split = split[split.team == args.team.upper()]
+    if args.pos:
+        want = {p.strip().upper() for p in args.pos.split(",")}
+        split = split[split.pos.isin(want)]
+
+    lt = room_mod.league_table(split)
+    if len(lt) and not args.team and not args.pos:
+        print(f"\nOpportunity share when the room is whole vs depleted, "
+              f"{seasons.start}-{seasons.stop - 1}:")
+        for _, r in lt.iterrows():
+            print(f"  {r.pos}: healthy {r.healthy_share*100:5.2f}%   "
+                  f"depleted {r.depleted_share*100:5.2f}%   "
+                  f"fitted {r.pooled*100:5.2f}%   "
+                  f"of which vacated {r.inflation*100:+.2f}pp "
+                  f"({r.inflation_pct*100:.0f}% of the baseline)   n={int(r.players)}")
+
+    f = room_mod.flags(split, min_inflation=args.min_inflation).head(args.top)
+    if not len(f):
+        print("\nnothing above the threshold")
+        return
+
+    title = ("Usage that rests on a depleted room  ·  "
+             f"{seasons.start}-{seasons.stop - 1}  ·  "
+             "fitted share vs the share he saw with the room whole")
+    if not _RICH:
+        print("\n" + title)
+        print(f[["name", "pos", "team", "depth", "games", "healthy_games",
+                 "healthy_share", "depleted_share", "pooled",
+                 "inflation"]].to_string(index=False))
+    else:
+        from rich import box
+        from rich.table import Table
+        from .board import POS_STYLE, _fmt
+        t = Table(title=title, box=box.SIMPLE_HEAVY, header_style="bold",
+                  title_style="bold", pad_edge=False)
+        for name, just, width in (("#", "right", 3), ("Player", "left", 21),
+                                  ("Pos", "center", 4), ("Tm", "center", 3),
+                                  ("Dep", "right", 3), ("G", "right", 3),
+                                  ("Gh", "right", 3), ("Healthy", "right", 8),
+                                  ("Depleted", "right", 9), ("Fitted", "right", 7),
+                                  ("Vacated", "right", 8)):
+            t.add_column(name, justify=just, width=width if name != "Player" else None,
+                         min_width=width if name == "Player" else None, no_wrap=True)
+        for i, (_, r) in enumerate(f.iterrows(), start=1):
+            t.add_row(str(i), str(r["name"]),
+                      f"[{POS_STYLE.get(r.pos, 'white')}]{r.pos}[/]", str(r.team),
+                      _fmt(r.depth, 0), str(int(r.games)), str(int(r.healthy_games)),
+                      f"{r.healthy_share*100:.2f}%", f"{r.depleted_share*100:.2f}%",
+                      f"{r.pooled*100:.2f}%",
+                      f"[bold]{r.inflation*100:+.2f}pp[/]")
+        _console().print(t)
+
+    note = ("Diagnostic only — the projections do not correct for this. "
+            "The walk-forward test is in docs/ROOM.md and it did not reach "
+            "significance, so nothing here is subtracted from anyone.")
+    if _RICH:
+        _console().print(f"  [grey58]{note}[/]")
+    else:
+        print("  " + note)
+    if args.out:
+        split.to_csv(args.out, index=False)
+        print(f"wrote {args.out}")
+
+
 def cmd_board(args):
     b, res = _load_bundle(), _load_result()
     df = _frame(b, res, args)
@@ -526,6 +598,18 @@ def main(argv=None):
     ad.add_argument("--save", default=None,
                     help="freeze the fetched board to this CSV")
     ad.set_defaults(func=cmd_adp)
+
+    rm = common(sub.add_parser(
+        "room", help="whose fitted usage rests on injuries around him"))
+    rm.add_argument("--top", type=int, default=25)
+    rm.add_argument("--pos", default=None, help="e.g. RB or RB,WR")
+    rm.add_argument("--team", default=None, help="e.g. NYG")
+    rm.add_argument("--lookback", type=int, default=4,
+                    help="seasons of history, matching fit_usage")
+    rm.add_argument("--min-inflation", type=float, default=0.02,
+                    help="minimum share points of vacated work to list")
+    rm.add_argument("--out", default=None, help="write the full split to CSV")
+    rm.set_defaults(func=cmd_room)
 
     v = common(sub.add_parser("validate", help="check the engine against reality"))
     v.set_defaults(func=cmd_validate)
