@@ -152,8 +152,7 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     # within one game can still consume different draws; these are controlled
     # same-seed sensitivities, not exact play-level common-random-number pairs.
     root = np.random.SeedSequence(seed)
-    (availability_seed, role_seed, shock_seed,
-     scoring_seed, games_seed) = root.spawn(5)
+    availability_seed, role_seed, shock_seed, scoring_seed, games_seed = root.spawn(5)
     availability_rng = np.random.default_rng(availability_seed)
     role_rng = np.random.default_rng(role_seed)
     shock_rng = np.random.default_rng(shock_seed)
