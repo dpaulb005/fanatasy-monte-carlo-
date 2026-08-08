@@ -29,6 +29,56 @@ The first results and the corrected RB/QB error diagnosis are recorded in
 
 ---
 
+## Working alongside the `dev` branch
+
+`dev` (David Brown) and this branch are developed in parallel and each keeps
+picking up the other's work. Two things about that are worth knowing before the
+next integration, because both have already cost time.
+
+**Cherry-pick the delta; do not merge.** `dev` rebases this branch's commits
+rather than merging them, so the same content appears there under different
+hashes. A merge then reports a merge base far behind both tips and conflicts on
+work that is already identical. The reliable move is:
+
+```bash
+git fetch origin
+git log --oneline claude/nfl-monte-carlo-fantasy-73qqvf..origin/dev
+git cherry-pick <the commits whose content this branch genuinely lacks>
+```
+
+`git diff --stat origin/dev HEAD` is the fast way to see what is actually
+different, as opposed to what the commit graph claims.
+
+**Check for signature drift, and check it by running something.** Twice now a
+`dev` commit has called a function on this branch with parameters it does not
+have, because the two branches resolved the same merge differently:
+
+- `experiments.py` passed `use_scoring_shocks=` to a `run_season` that had the
+  scoring shock folded into `use_role_variance`.
+- Before that, the named-RNG-stream refactor and the goal-line scoring shock
+  collided in `season.py`.
+
+Neither shows up in a diff review, an import, or the unit tests — the tests
+build their own `SimpleNamespace` bundles and never call `run_season`. Both
+would have raised `TypeError` on the first real `factors` run. After any
+integration that touches `season.py`, `engine.py` or `build.py`, run something
+end to end. A one-week schedule at 40 replications takes under a minute and is
+enough:
+
+```python
+b = build.Bundle.load('artifacts/bundle.pkl')
+b.schedule = b.schedule[b.schedule.week <= 1]
+season.run_season(b, 40, seed=5, verbose=False, use_scoring_shocks=False)
+```
+
+**Where the two branches have disagreed, `dev` has generally been right.** It
+found the `_age()` and `roster_continuity()` bugs, its common-random-number
+streams are a real improvement over a single season RNG, and its separate
+`use_scoring_shocks` flag is better than folding the shock into role variance.
+Adopt rather than argue unless there is a documented reason not to.
+
+---
+
 ## Run it
 
 ```bash
