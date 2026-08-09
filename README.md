@@ -112,6 +112,33 @@ target share. Real conversion runs from 0.143 to 0.457 around a league rate of
 
 ---
 
+## Does it model defence? And should players have ratings?
+
+Defence is five team-level scalars — pass EPA, rush EPA, completion-% and
+yards-per-carry allowed, sack rate — shrunk toward league mean. The engine reads
+three of them, at three points: sack probability, completion probability, yards
+per carry. `def_pass_epa` and `def_rush_epa` are fit and never read.
+
+Both questions were researched and measured, and both answers are "less than you
+would think" — see [`docs/RATINGS_AND_DEFENCE.md`](docs/RATINGS_AND_DEFENCE.md).
+
+**Defence is a weekly phenomenon that averages out over a season.** Adding
+opponent defence to a single-game projection is worth ΔR² ≈ 0.035; adding it to a
+season-long one is worth ΔR² ≈ 0.001. A 35:1 ratio. Season-long schedule
+dispersion collapses to 1/√17 — measured ratios 0.225-0.263 against the 0.243 you
+would get from drawing opponents at random. For the single most
+schedule-advantaged player in the league, correct defensive adjustment is worth
+1.3-3.9% of his season.
+
+**A Madden-style rating layer would lose information, not add it.** No public NFL
+system goes from ratings to simulated play outcomes; every simulator built to
+forecast rather than entertain has no rating layer at all. The rate parameters
+here already *are* a generative player model, and re-encoding them as 0-99
+integers is a lossy step with no likelihood attached. The one place a rating-like
+prior is legitimate is rookies, who have no NFL history to fit rates from.
+
+---
+
 ## Vacated usage
 
 `fit_usage` pools every game a player appeared in and cannot tell a carry taken
