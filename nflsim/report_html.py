@@ -108,6 +108,10 @@ def _payload(bundle, result, df: pd.DataFrame, scoring: Scoring,
     wstats = result.get("weekly_stats")
     wfp = result.get("weekly_fp")
     wplayed = result.get("weekly_played")
+    # Optional: result files written before weekly stat ranges existed have
+    # only the means, and the report falls back to showing those.
+    wsq = result.get("weekly_stat_q")
+    wfpl = result.get("weekly_fp_live")
     wopp = result.get("week_opponent", {})
 
     def r(x, nd=1):
@@ -130,12 +134,27 @@ def _payload(bundle, result, df: pd.DataFrame, scoring: Scoring,
                 if opp is None:
                     wk.append(None)          # bye week
                     continue
+                # Each stat is shipped as [p10, mean, p90] over the weeks he
+                # played, not as a bare mean. A mean across ten thousand
+                # universes puts a hundred-yard receiver at a hundred yards
+                # every single week, which reads as a model that cannot produce
+                # a thirty-yard game -- and it can, the mean was just hiding it.
+                cells = []
+                for k, _, nd in view:
+                    m = r(wstats[w, SIDX[k], gi], nd)
+                    if wsq is None:
+                        cells.append(m)
+                    else:
+                        cells.append([r(wsq[w, 0, SIDX[k], gi], nd), m,
+                                      r(wsq[w, 2, SIDX[k], gi], nd)])
+                lo, hi = (r(wfpl[w, 0, gi]), r(wfpl[w, 1, gi])) if wfpl is not None \
+                    else (r(wfp[w, 2, gi]), r(wfp[w, 6, gi]))
                 wk.append([
                     opp,
                     r(wfp[w, 0, gi]),                       # mean fantasy points
-                    r(wfp[w, 2, gi]), r(wfp[w, 4, gi]), r(wfp[w, 6, gi]),  # p10, median, p90
+                    lo, r(wfp[w, 4, gi]), hi,               # floor, median, ceiling
                     r(wplayed[w, gi], 2),                   # share of sims available
-                    *[r(wstats[w, SIDX[k], gi], nd) for k, _, nd in view],
+                    *cells,
                 ])
 
         dm = decision[gi]

@@ -161,6 +161,12 @@ table.wk{min-width:820px; margin-top:4px}
 table.wk th{position:static; top:auto}
 table.wk td,table.wk th{padding:6px 7px; font-size:12.5px}
 table.wk tbody tr:hover{background:var(--raised)}
+/* Floor and ceiling flank the mean in each stat cell, recessive so the mean
+   still reads first but the spread is visible without a hover. */
+table.wk td .rng{color:var(--muted); font-size:10.5px; font-variant-numeric:tabular-nums}
+table.wk td .rng:first-child::after{content:"–"; padding:0 2px; opacity:.55}
+table.wk td .rng:last-child::before{content:"–"; padding:0 2px; opacity:.55}
+table.wk td b{font-weight:650; padding:0 1px}
 td.bye{color:var(--muted); font-style:italic}
 .season-strip{display:flex; flex-wrap:wrap; gap:20px; margin-bottom:18px}
 .kv{display:flex; flex-direction:column}
@@ -305,7 +311,17 @@ function detail(p){
   const heads = DATA.headers[p.p] || [];
   const rows = p.wk.map((w,i)=>{
     if(!w) return `<tr><td class="l num">${i+1}</td><td class="l bye" colspan="${heads.length+5}">bye week</td></tr>`;
-    const stats = w.slice(6).map((v,j)=>`<td class="num">${fmt(v, j<heads.length?1:0)}</td>`).join("");
+    // A stat cell is [p10, mean, p90] when the run captured ranges, and a bare
+    // mean on older result files. The range is the point: a mean alone shows a
+    // 100-yard receiver at 100 yards every week and hides that the same model
+    // produces 40 and 170.
+    const stats = w.slice(6).map((v,j)=>{
+      const nd = j<heads.length?1:0;
+      if(!Array.isArray(v)) return `<td class="num">${fmt(v,nd)}</td>`;
+      return `<td class="num"><span class="rng">${fmt(v[0],nd)}</span>`
+           + `<b>${fmt(v[1],nd)}</b>`
+           + `<span class="rng">${fmt(v[2],nd)}</span></td>`;
+    }).join("");
     return `<tr>
       <td class="l num">${i+1}</td>
       <td class="l">${w[0]}</td>

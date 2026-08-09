@@ -64,6 +64,14 @@ def _load_result():
             "week_opponent": z["week_opponent"].item(),
             "week_quantiles": list(z["week_quantiles"]),
         })
+    # Weekly stat ranges are newer than the weekly means; a result file written
+    # before they existed still loads.
+    if "weekly_stat_q" in z.files:
+        out.update({
+            "weekly_stat_q": z["weekly_stat_q"],
+            "weekly_fp_live": z["weekly_fp_live"],
+            "week_stat_quantiles": list(z["week_stat_quantiles"]),
+        })
     return out
 
 
@@ -105,6 +113,9 @@ def cmd_simulate(args):
         payload.update(
             weekly_stats=res["weekly_stats"], weekly_fp=res["weekly_fp"],
             weekly_played=res["weekly_played"],
+            weekly_stat_q=res["weekly_stat_q"],
+            weekly_fp_live=res["weekly_fp_live"],
+            week_stat_quantiles=np.array(res["week_stat_quantiles"]),
             week_opponent=np.array(res["week_opponent"], dtype=object),
             week_quantiles=np.array(res["week_quantiles"]),
         )

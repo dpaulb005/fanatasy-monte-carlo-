@@ -125,6 +125,24 @@ def draw_team_shocks(bundle: Bundle, n_sims: int, rng: np.random.Generator,
 
 WEEK_QUANTILES = (10, 25, 50, 75, 90)
 
+# Stat lines carry a narrower set: a floor, a median and a ceiling is enough to
+# show the shape of a week without doubling the size of the result file.
+WEEK_STAT_QUANTILES = (10, 50, 90)
+
+
+def _masked_percentile(buf: np.ndarray, live: np.ndarray, q: float) -> np.ndarray:
+    """Percentile over the replications in which the player was on the field.
+
+    `buf` is (channels, sims, players) and `live` is (sims, players). Sims where
+    a player did not play are set to nan so `nanpercentile` skips them; a player
+    who never played in any replication comes back as zero rather than nan, so
+    the arrays stay clean for anything downstream that sums them.
+    """
+    masked = np.where(live[None, :, :], buf, np.nan)
+    with np.errstate(invalid="ignore"):
+        out = np.nanpercentile(masked, q, axis=1)
+    return np.nan_to_num(out, nan=0.0).astype(np.float32)
+
 
 def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
                use_injuries: bool = True, use_role_variance: bool = True,
@@ -195,6 +213,9 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
     weekly_stats = np.zeros((weeks, NSTAT, P_), dtype=np.float32) if weekly else None
     weekly_fp = np.zeros((weeks, len(WEEK_QUANTILES) + 2, P_), dtype=np.float32) if weekly else None
     weekly_played = np.zeros((weeks, P_), dtype=np.float32) if weekly else None
+    weekly_stat_q = (np.zeros((weeks, len(WEEK_STAT_QUANTILES), NSTAT, P_),
+                              dtype=np.float32) if weekly else None)
+    weekly_fp_live = np.zeros((weeks, 2, P_), dtype=np.float32) if weekly else None
     week_opp: dict[int, dict[str, str]] = {}
     cur_week = None
 
@@ -203,11 +224,27 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
         if not weekly or w is None:
             return
         weekly_stats[w] = week_buf.mean(axis=1)
+        # Who was on the field in each replication of this week. Taken from the
+        # availability draw rather than from the stat buffer, because a healthy
+        # player can legitimately post a zero line.
+        live = avail[w] > 0.5
+        # The stat lines need a range as well as a mean, or a weekly table shows
+        # a hundred-yard receiver going for a hundred yards every single week --
+        # which is what a mean across ten thousand universes looks like, and
+        # reads as a model that cannot produce a thirty-yard game.
+        #
+        # Conditioned on him playing. Averaging the sims where he was hurt into
+        # the tenth percentile makes every starter's floor zero, which says
+        # nothing about the shape of a game he actually appears in.
+        for qi, q in enumerate(WEEK_STAT_QUANTILES):
+            weekly_stat_q[w, qi] = _masked_percentile(week_buf, live, q)
         fp = fantasy_points(week_buf, scoring)
         weekly_fp[w, 0] = fp.mean(axis=0)
         weekly_fp[w, 1] = fp.std(axis=0)
         for qi, q in enumerate(WEEK_QUANTILES):
             weekly_fp[w, 2 + qi] = np.percentile(fp, q, axis=0)
+        weekly_fp_live[w, 0] = _masked_percentile(fp[None, :, :], live, 10)[0]
+        weekly_fp_live[w, 1] = _masked_percentile(fp[None, :, :], live, 90)[0]
         week_buf[:] = 0.0
 
     t0 = time.time()
@@ -280,6 +317,11 @@ def run_season(bundle: Bundle, n_sims: int, seed: int, verbose: bool = True,
             "weekly_stats": weekly_stats,       # (weeks, stat, player) means
             "weekly_fp": weekly_fp,             # (weeks, [mean, sd, *quantiles], player)
             "weekly_played": weekly_played,     # (weeks, player) availability
+            # (weeks, quantile, stat, player), conditioned on him playing --
+            # this is what makes a weekly table show a range instead of a mean.
+            "weekly_stat_q": weekly_stat_q,
+            "weekly_fp_live": weekly_fp_live,   # (weeks, [p10, p90], player)
+            "week_stat_quantiles": list(WEEK_STAT_QUANTILES),
             "week_opponent": week_opp,          # week -> team -> opponent label
             "week_quantiles": list(WEEK_QUANTILES),
         })
