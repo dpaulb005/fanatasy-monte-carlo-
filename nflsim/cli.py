@@ -248,6 +248,75 @@ def cmd_draft(args):
         print(f"wrote {args.out}")
 
 
+def cmd_why(args):
+    """Print the chain that produced one player's projection."""
+    from . import explain as ex
+    b, res = _load_bundle(), _load_result()
+    proj = _frame(b, res, args)
+    bl = build_mod.fit_rank_baselines(TARGET_SEASON)
+    c = ex.chain(args.player, b, proj, bl)
+    p, f = c["projection"], c["fitted"]
+
+    print(f"\n{c['name']}  ·  {c['pos']} {c['team']}  ·  age {c['age']:.1f}  ·  "
+          f"depth {c['depth']}  ·  confidence {c['conf']:.2f}")
+    print(f"  projected {p.points:.0f} pts  ({p.ppg:.1f}/gm over {p.games:.1f} games)"
+          f"  ·  {p.pos}{int(p.pos_rank)}  ·  VOR {p.vor:.0f}")
+
+    if len(c["history"]):
+        print("\n  what he actually did")
+        h = c["history"]
+        cols = [x for x in ("team", "games", "targets", "tgt_share", "rec",
+                            "rec_yds", "rec_td", "carries", "rush_share",
+                            "rush_yds", "rush_td", "ppg") if x in h]
+        print(h[cols].to_string(float_format=lambda v: f"{v:.3f}"))
+
+    print("\n  how the share was built")
+    for key, label in (("target_share", "target share"), ("rush_share", "rush share")):
+        last = c.get("last", {}).get(key)
+        wt = c.get("weighted", {}).get(key)
+        base = c.get("baseline", {}).get(key)
+        if wt is None or not np.isfinite(wt):
+            continue
+        # `base` can legitimately be 0.0 -- a truthiness test would silently
+        # drop the shrinkage line for a position with no share of that stat.
+        has_base = base is not None and np.isfinite(base)
+        print(f"    {label}")
+        if last is not None and np.isfinite(last):
+            print(f"      last season            {last:.4f}")
+        print(f"      recency-weighted       {wt:.4f}"
+              f"   (weights {np.round(c['weights'][key], 3)}, oldest first)")
+        if has_base:
+            print(f"      depth-{c['depth']} baseline        {base:.4f}")
+            print(f"      shrinkage blend        "
+                  f"{c['conf'] * wt + (1 - c['conf']) * base:.4f}")
+        print(f"      handed to the engine   {f[key]:.4f}   <- after team normalisation")
+
+    print(f"\n  red zone      rz target share {f['rz_target_share']:.4f}   "
+          f"goal-line targets {f['gl_target_share']:.4f}   "
+          f"goal-line carries {f['gl_rush_share']:.4f}")
+    print(f"  efficiency    aDOT {f['adot']:.2f}   YAC {f['yac']:.2f}   "
+          f"catch over exp {f['catch_oe']:+.3f}   YPC over exp {f['ypc_oe']:+.3f}")
+    print(f"  availability  injury rate {c['injury_rate']:.4f}/wk   "
+          f"personal durability multiplier {c['avail_mult']:.3f}")
+
+    if not args.no_redzone:
+        try:
+            rz = ex.redzone_conversion([args.player])
+            if len(rz):
+                r = rz.iloc[0]
+                print(f"\n  touchdown conversion (context only -- the model holds this\n"
+                      f"  constant within a position, because it does not persist):\n"
+                      f"    {int(r.rz_targets)} red-zone targets, {int(r.rz_td)} TD, "
+                      f"rate {r.rate:.3f} vs league {r.league_rate:.3f} "
+                      f"({r.vs_league*100:+.0f}%)")
+        except Exception as exc:                       # noqa: BLE001
+            print(f"  (red-zone split unavailable: {exc})")
+
+    print("\n  the room")
+    print(c["room"].to_string(index=False, float_format=lambda v: f"{v:.3f}"))
+    print()
+
+
 def cmd_chart(args):
     """Render the top of the board to a PNG."""
     from . import chart as chart_mod
@@ -613,6 +682,13 @@ def main(argv=None):
     ad.add_argument("--save", default=None,
                     help="freeze the fetched board to this CSV")
     ad.set_defaults(func=cmd_adp)
+
+    wy = common(sub.add_parser(
+        "why", help="show the chain behind one player's projection"))
+    wy.add_argument("player")
+    wy.add_argument("--no-redzone", action="store_true",
+                    help="skip the play-by-play red-zone split (much faster)")
+    wy.set_defaults(func=cmd_why)
 
     ch = common(sub.add_parser("chart", help="render the board to a PNG"))
     ch.add_argument("--top", type=int, default=30)

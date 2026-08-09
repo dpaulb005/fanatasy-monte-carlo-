@@ -65,6 +65,7 @@ python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context 
 python -m nflsim draft --interactive    # mock draft against bots that follow ESPN ADP
 python -m nflsim room --pos RB          # whose usage rests on injuries around him
 python -m nflsim chart --top 30         # PNG of the top of the board
+python -m nflsim why "Travis Kelce"     # the chain behind one projection
 ```
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
@@ -81,6 +82,33 @@ sensitivity estimates, not isolated player effects or causal claims. Use at
 least 5,000 simulations for decision-grade tail comparisons. The
 ongoing research and promotion gates are documented in
 [`docs/RESEARCH_LOOP.md`](docs/RESEARCH_LOOP.md).
+
+---
+
+## Why is this player projected there?
+
+```bash
+python -m nflsim why "Rhamondre Stevenson"
+```
+
+Prints the chain: what he actually did, the recency-weighted mean of it, the
+shrinkage blend toward his depth-rank baseline, what the engine was finally
+handed after normalisation, and the room around him. Three worked case studies
+are in [`docs/PLAYER_DIAGNOSTICS.md`](docs/PLAYER_DIAGNOSTICS.md), along with two
+things it turned up:
+
+**Age enters the model in exactly one place, and it is not usage.** The only
+call site is `age_injury_multiplier`, which raises the injury hazard. There is
+no aging curve on target share, rush share or efficiency. For a durable veteran
+even the hazard term cancels, because it is multiplied by the player's own
+availability record. The 2025 backtest over-projects the 28-31 and 31-34 age
+bands by about 21 points each while under-projecting 25-28 by 9.
+
+**Red-zone conversion is noise, and holding it constant is correct.** The model
+gives every player at a position the same red-zone share multiple of his overall
+target share. Real conversion runs from 0.143 to 0.457 around a league rate of
+0.238 — but a player's 2022-23 rate correlates with his own 2024-25 rate at
+**r = -0.047**. It does not persist, so regressing it away is the right call.
 
 ---
 
@@ -527,6 +555,7 @@ nflsim/
   engine.py     the play-by-play engine
   season.py     availability draws and the season loop
   analysis.py   scoring, projections, VOR, tiers
+  explain.py    the chain behind one player's number
   chart.py      the board as a static distribution plot
   room.py       whether a player's usage was earned or vacated
   adp.py        the market board: ESPN, expert consensus, or your own CSV
