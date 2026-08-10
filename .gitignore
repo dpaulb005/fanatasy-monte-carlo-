@@ -1,0 +1,39 @@
+# Secrets — never commit
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Django
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+
+# Raw ESPN payloads / local data caches (may contain personal data)
+backend/data/
+*.raw.json
+
+# Node / Vue
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

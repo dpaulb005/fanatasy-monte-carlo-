@@ -1,0 +1,3749 @@
+{
+ "source": "bigga",
+ "label": "Brock Bigga Redraft Rankings",
+ "season": 2026,
+ "published": "2026-08-02",
+ "adp_teams": 12,
+ "players": [
+  {
+   "position": "QB",
+   "rank_pos": 1,
+   "name": "Josh Allen",
+   "team": "BUF",
+   "tier": 1,
+   "adp_text": "3.04",
+   "risk": 2.6,
+   "upside": 9.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 2,
+   "name": "Lamar Jackson",
+   "team": "BAL",
+   "tier": 2,
+   "adp_text": "4.02",
+   "risk": 5.5,
+   "upside": 9.0
+  },
+  {
+   "position": "QB",
+   "rank_pos": 3,
+   "name": "Jayden Daniels",
+   "team": "WAS",
+   "tier": 2,
+   "adp_text": "6.02",
+   "risk": 4.3,
+   "upside": 6.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 4,
+   "name": "Jalen Hurts",
+   "team": "PHI",
+   "tier": 2,
+   "adp_text": "6.07",
+   "risk": 3.8,
+   "upside": 5.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 5,
+   "name": "Joe Burrow",
+   "team": "CIN",
+   "tier": 2,
+   "adp_text": "5.09",
+   "risk": 5.5,
+   "upside": 8.9
+  },
+  {
+   "position": "QB",
+   "rank_pos": 6,
+   "name": "Drake Maye",
+   "team": "NE",
+   "tier": 2,
+   "adp_text": "5.03",
+   "risk": 4.1,
+   "upside": 8.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 7,
+   "name": "Jaxson Dart",
+   "team": "NYG",
+   "tier": 3,
+   "adp_text": "7.09",
+   "risk": 5.7,
+   "upside": 8.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 8,
+   "name": "Caleb Williams",
+   "team": "CHI",
+   "tier": 4,
+   "adp_text": "7.11",
+   "risk": 5.8,
+   "upside": 7.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 9,
+   "name": "Dak Prescott",
+   "team": "DAL",
+   "tier": 4,
+   "adp_text": "8.06",
+   "risk": 4.1,
+   "upside": 7.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 10,
+   "name": "Trevor Lawrence",
+   "team": "JAX",
+   "tier": 4,
+   "adp_text": "8.08",
+   "risk": 4.9,
+   "upside": 7.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 11,
+   "name": "Brock Purdy",
+   "team": "SF",
+   "tier": 4,
+   "adp_text": "9.08",
+   "risk": 4.2,
+   "upside": 7.5
+  },
+  {
+   "position": "QB",
+   "rank_pos": 12,
+   "name": "Justin Herbert",
+   "team": "LAC",
+   "tier": 4,
+   "adp_text": "7.12",
+   "risk": 4.8,
+   "upside": 7.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 13,
+   "name": "Jared Goff",
+   "team": "DET",
+   "tier": 4,
+   "adp_text": "11.02",
+   "risk": 2.8,
+   "upside": 7.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 14,
+   "name": "Bo Nix",
+   "team": "DEN",
+   "tier": 5,
+   "adp_text": "10.11",
+   "risk": 4.6,
+   "upside": 6.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 15,
+   "name": "Patrick Mahomes",
+   "team": "KC",
+   "tier": 5,
+   "adp_text": "9.04",
+   "risk": 5.3,
+   "upside": 8.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 16,
+   "name": "Baker Mayfield",
+   "team": "TB",
+   "tier": 5,
+   "adp_text": "12.09",
+   "risk": 4.1,
+   "upside": 6.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 17,
+   "name": "Matthew Stafford",
+   "team": "LAR",
+   "tier": 6,
+   "adp_text": "10.07",
+   "risk": 4.4,
+   "upside": 5.1
+  },
+  {
+   "position": "QB",
+   "rank_pos": 18,
+   "name": "Kyler Murray",
+   "team": "MIN",
+   "tier": 6,
+   "adp_text": "12.10",
+   "risk": 7.0,
+   "upside": 7.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 19,
+   "name": "Tyler Shough",
+   "team": "NO",
+   "tier": 6,
+   "adp_text": "12.12",
+   "risk": 4.3,
+   "upside": 7.3
+  },
+  {
+   "position": "QB",
+   "rank_pos": 20,
+   "name": "Malik Willis",
+   "team": "MIA",
+   "tier": 6,
+   "adp_text": "12.06",
+   "risk": 5.3,
+   "upside": 8.0
+  },
+  {
+   "position": "QB",
+   "rank_pos": 21,
+   "name": "Jordan Love",
+   "team": "GB",
+   "tier": 6,
+   "adp_text": "11.05",
+   "risk": 3.3,
+   "upside": 5.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 22,
+   "name": "Cam Ward",
+   "team": "TEN",
+   "tier": 7,
+   "adp_text": "14.10",
+   "risk": 4.6,
+   "upside": 6.0
+  },
+  {
+   "position": "QB",
+   "rank_pos": 23,
+   "name": "C.J. Stroud",
+   "team": "HOU",
+   "tier": 7,
+   "adp_text": "14.07",
+   "risk": 4.2,
+   "upside": 6.1
+  },
+  {
+   "position": "QB",
+   "rank_pos": 24,
+   "name": "Sam Darnold",
+   "team": "SEA",
+   "tier": 7,
+   "adp_text": "14.09",
+   "risk": 4.0,
+   "upside": 6.2
+  },
+  {
+   "position": "QB",
+   "rank_pos": 25,
+   "name": "Daniel Jones",
+   "team": "IND",
+   "tier": 7,
+   "adp_text": "17.03",
+   "risk": 7.5,
+   "upside": 6.3
+  },
+  {
+   "position": "QB",
+   "rank_pos": 26,
+   "name": "Jacoby Brissett",
+   "team": "ARI",
+   "tier": 8,
+   "adp_text": "17.09",
+   "risk": 4.7,
+   "upside": 6.0
+  },
+  {
+   "position": "QB",
+   "rank_pos": 27,
+   "name": "Bryce Young",
+   "team": "CAR",
+   "tier": 8,
+   "adp_text": "17.02",
+   "risk": 4.0,
+   "upside": 5.4
+  },
+  {
+   "position": "QB",
+   "rank_pos": 28,
+   "name": "Aaron Rodgers",
+   "team": "PIT",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 7.0,
+   "upside": 3.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 29,
+   "name": "Geno Smith",
+   "team": "NYJ",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.9,
+   "upside": 3.9
+  },
+  {
+   "position": "QB",
+   "rank_pos": 30,
+   "name": "Shedeur Sanders",
+   "team": "CLE",
+   "tier": 8,
+   "adp_text": "19.10",
+   "risk": 8.1,
+   "upside": 5.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 31,
+   "name": "Tua Tagovailoa",
+   "team": "ATL",
+   "tier": 9,
+   "adp_text": "20.09",
+   "risk": 5.5,
+   "upside": 4.3
+  },
+  {
+   "position": "QB",
+   "rank_pos": 32,
+   "name": "Fernando Mendoza",
+   "team": "LV",
+   "tier": 9,
+   "adp_text": "15.02",
+   "risk": 8.8,
+   "upside": 6.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 33,
+   "name": "Kirk Cousins",
+   "team": "LV",
+   "tier": 9,
+   "adp_text": "-",
+   "risk": 8.1,
+   "upside": 4.8
+  },
+  {
+   "position": "QB",
+   "rank_pos": 34,
+   "name": "Michael Penix Jr.",
+   "team": "ATL",
+   "tier": 9,
+   "adp_text": "19.12",
+   "risk": 5.3,
+   "upside": 4.7
+  },
+  {
+   "position": "QB",
+   "rank_pos": 35,
+   "name": "Carson Beck",
+   "team": "ARI",
+   "tier": 9,
+   "adp_text": "-",
+   "risk": 8.0,
+   "upside": 6.5
+  },
+  {
+   "position": "QB",
+   "rank_pos": 36,
+   "name": "Deshaun Watson",
+   "team": "CLE",
+   "tier": 9,
+   "adp_text": "-",
+   "risk": 6.3,
+   "upside": 4.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 1,
+   "name": "Jahmyr Gibbs",
+   "team": "DET",
+   "tier": 1,
+   "adp_text": "1.02",
+   "risk": 2.0,
+   "upside": 9.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 2,
+   "name": "Bijan Robinson",
+   "team": "ATL",
+   "tier": 1,
+   "adp_text": "1.02",
+   "risk": 1.3,
+   "upside": 10.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 3,
+   "name": "Christian McCaffrey",
+   "team": "SF",
+   "tier": 2,
+   "adp_text": "1.05",
+   "risk": 5.6,
+   "upside": 9.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 4,
+   "name": "Jonathan Taylor",
+   "team": "IND",
+   "tier": 3,
+   "adp_text": "1.08",
+   "risk": 3.9,
+   "upside": 9.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 5,
+   "name": "James Cook III",
+   "team": "BUF",
+   "tier": 4,
+   "adp_text": "2.01",
+   "risk": 2.5,
+   "upside": 8.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 6,
+   "name": "De'Von Achane",
+   "team": "MIA",
+   "tier": 4,
+   "adp_text": "2.01",
+   "risk": 3.8,
+   "upside": 9.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 7,
+   "name": "Ashton Jeanty",
+   "team": "LV",
+   "tier": 4,
+   "adp_text": "2.03",
+   "risk": 5.6,
+   "upside": 8.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 8,
+   "name": "Chase Brown",
+   "team": "CIN",
+   "tier": 4,
+   "adp_text": "2.07",
+   "risk": 4.8,
+   "upside": 8.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 9,
+   "name": "Kenneth Walker III",
+   "team": "KC",
+   "tier": 5,
+   "adp_text": "2.11",
+   "risk": 5.0,
+   "upside": 8.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 10,
+   "name": "Omarion Hampton",
+   "team": "LAC",
+   "tier": 5,
+   "adp_text": "2.07",
+   "risk": 4.7,
+   "upside": 8.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 11,
+   "name": "Derrick Henry",
+   "team": "BAL",
+   "tier": 5,
+   "adp_text": "3.01",
+   "risk": 4.7,
+   "upside": 8.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 12,
+   "name": "Saquon Barkley",
+   "team": "PHI",
+   "tier": 5,
+   "adp_text": "2.05",
+   "risk": 4.9,
+   "upside": 8.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 13,
+   "name": "Josh Jacobs",
+   "team": "GB",
+   "tier": 5,
+   "adp_text": "3.04",
+   "risk": 8.5,
+   "upside": 7.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 14,
+   "name": "Kyren Williams",
+   "team": "LAR",
+   "tier": 6,
+   "adp_text": "3.08",
+   "risk": 5.5,
+   "upside": 8.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 15,
+   "name": "Jeremiyah Love",
+   "team": "ARI",
+   "tier": 6,
+   "adp_text": "2.08",
+   "risk": 5.2,
+   "upside": 8.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 16,
+   "name": "Cam Skattebo",
+   "team": "NYG",
+   "tier": 6,
+   "adp_text": "5.01",
+   "risk": 6.3,
+   "upside": 7.5
+  },
+  {
+   "position": "RB",
+   "rank_pos": 17,
+   "name": "Breece Hall",
+   "team": "NYJ",
+   "tier": 6,
+   "adp_text": "3.08",
+   "risk": 5.3,
+   "upside": 8.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 18,
+   "name": "Bucky Irving",
+   "team": "TB",
+   "tier": 6,
+   "adp_text": "3.10",
+   "risk": 5.8,
+   "upside": 7.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 19,
+   "name": "Javonte Williams",
+   "team": "DAL",
+   "tier": 6,
+   "adp_text": "4.02",
+   "risk": 4.3,
+   "upside": 7.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 20,
+   "name": "D'Andre Swift",
+   "team": "CHI",
+   "tier": 7,
+   "adp_text": "6.05",
+   "risk": 5.3,
+   "upside": 6.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 21,
+   "name": "Bhayshul Tuten",
+   "team": "JAX",
+   "tier": 7,
+   "adp_text": "5.12",
+   "risk": 6.4,
+   "upside": 7.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 22,
+   "name": "TreVeyon Henderson",
+   "team": "NE",
+   "tier": 7,
+   "adp_text": "4.12",
+   "risk": 5.1,
+   "upside": 8.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 23,
+   "name": "Travis Etienne Jr.",
+   "team": "NO",
+   "tier": 7,
+   "adp_text": "4.01",
+   "risk": 4.6,
+   "upside": 7.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 24,
+   "name": "Quinshon Judkins",
+   "team": "CLE",
+   "tier": 7,
+   "adp_text": "5.07",
+   "risk": 5.0,
+   "upside": 7.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 25,
+   "name": "David Montgomery",
+   "team": "HOU",
+   "tier": 7,
+   "adp_text": "5.08",
+   "risk": 4.1,
+   "upside": 6.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 26,
+   "name": "Chuba Hubbard",
+   "team": "CAR",
+   "tier": 7,
+   "adp_text": "7.03",
+   "risk": 3.9,
+   "upside": 6.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 27,
+   "name": "Jaylen Warren",
+   "team": "PIT",
+   "tier": 7,
+   "adp_text": "7.03",
+   "risk": 4.4,
+   "upside": 6.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 28,
+   "name": "Jadarian Price",
+   "team": "SEA",
+   "tier": 8,
+   "adp_text": "7.08",
+   "risk": 5.8,
+   "upside": 7.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 29,
+   "name": "Rhamondre Stevenson",
+   "team": "NE",
+   "tier": 8,
+   "adp_text": "7.11",
+   "risk": 4.8,
+   "upside": 5.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 30,
+   "name": "Rico Dowdle",
+   "team": "PIT",
+   "tier": 8,
+   "adp_text": "8.04",
+   "risk": 4.5,
+   "upside": 4.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 31,
+   "name": "Kenny Gainwell",
+   "team": "TB",
+   "tier": 8,
+   "adp_text": "9.11",
+   "risk": 4.4,
+   "upside": 5.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 32,
+   "name": "Tony Pollard",
+   "team": "TEN",
+   "tier": 8,
+   "adp_text": "8.02",
+   "risk": 5.6,
+   "upside": 5.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 33,
+   "name": "Kyle Monangai",
+   "team": "CHI",
+   "tier": 8,
+   "adp_text": "8.06",
+   "risk": 5.8,
+   "upside": 5.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 34,
+   "name": "RJ Harvey",
+   "team": "DEN",
+   "tier": 8,
+   "adp_text": "6.08",
+   "risk": 6.2,
+   "upside": 5.5
+  },
+  {
+   "position": "RB",
+   "rank_pos": 35,
+   "name": "Jacory Croskey-Merritt",
+   "team": "WAS",
+   "tier": 8,
+   "adp_text": "10.07",
+   "risk": 6.3,
+   "upside": 5.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 36,
+   "name": "Rachaad White",
+   "team": "WAS",
+   "tier": 8,
+   "adp_text": "11.07",
+   "risk": 4.6,
+   "upside": 5.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 37,
+   "name": "Jordan Mason",
+   "team": "MIN",
+   "tier": 9,
+   "adp_text": "11.11",
+   "risk": 4.0,
+   "upside": 6.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 38,
+   "name": "J.K. Dobbins",
+   "team": "DEN",
+   "tier": 9,
+   "adp_text": "8.09",
+   "risk": 7.5,
+   "upside": 6.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 39,
+   "name": "Aaron Jones Sr.",
+   "team": "MIN",
+   "tier": 9,
+   "adp_text": "10.01",
+   "risk": 4.3,
+   "upside": 5.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 40,
+   "name": "Tyjae Spears",
+   "team": "TEN",
+   "tier": 9,
+   "adp_text": "13.08",
+   "risk": 4.6,
+   "upside": 4.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 41,
+   "name": "Blake Corum",
+   "team": "LAR",
+   "tier": 9,
+   "adp_text": "9.02",
+   "risk": 4.6,
+   "upside": 6.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 42,
+   "name": "Tyrone Tracy Jr.",
+   "team": "NYG",
+   "tier": 9,
+   "adp_text": "13.01",
+   "risk": 4.6,
+   "upside": 5.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 43,
+   "name": "Woody Marks",
+   "team": "HOU",
+   "tier": 10,
+   "adp_text": "12.09",
+   "risk": 4.3,
+   "upside": 5.4
+  },
+  {
+   "position": "RB",
+   "rank_pos": 44,
+   "name": "Chris Rodriguez Jr.",
+   "team": "JAX",
+   "tier": 10,
+   "adp_text": "12.10",
+   "risk": 5.1,
+   "upside": 5.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 45,
+   "name": "Jonathon Brooks",
+   "team": "CAR",
+   "tier": 10,
+   "adp_text": "12.06",
+   "risk": 7.5,
+   "upside": 6.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 46,
+   "name": "Isiah Pacheco",
+   "team": "DET",
+   "tier": 10,
+   "adp_text": "14.11",
+   "risk": 5.0,
+   "upside": 4.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 47,
+   "name": "Dylan Sampson",
+   "team": "CLE",
+   "tier": 10,
+   "adp_text": "14.10",
+   "risk": 3.7,
+   "upside": 4.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 48,
+   "name": "Zach Charbonnet",
+   "team": "SEA",
+   "tier": 10,
+   "adp_text": "11.06",
+   "risk": 7.0,
+   "upside": 5.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 49,
+   "name": "Alvin Kamara",
+   "team": "NO",
+   "tier": 10,
+   "adp_text": "14.02",
+   "risk": 6.5,
+   "upside": 4.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 50,
+   "name": "Jonah Coleman",
+   "team": "DEN",
+   "tier": 10,
+   "adp_text": "13.01",
+   "risk": 5.3,
+   "upside": 5.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 51,
+   "name": "Keaton Mitchell",
+   "team": "LAC",
+   "tier": 10,
+   "adp_text": "14.09",
+   "risk": 4.7,
+   "upside": 4.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 52,
+   "name": "Brian Robinson Jr.",
+   "team": "ATL",
+   "tier": 10,
+   "adp_text": "11.04",
+   "risk": 3.7,
+   "upside": 3.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 53,
+   "name": "Tyler Allgeier",
+   "team": "ARI",
+   "tier": 10,
+   "adp_text": "12.01",
+   "risk": 4.0,
+   "upside": 3.5
+  },
+  {
+   "position": "RB",
+   "rank_pos": 54,
+   "name": "Kimani Vidal",
+   "team": "LAC",
+   "tier": 10,
+   "adp_text": "16.01",
+   "risk": 4.4,
+   "upside": 3.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 55,
+   "name": "Jordan James",
+   "team": "SF",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 4.8,
+   "upside": 4.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 56,
+   "name": "Justice Hill",
+   "team": "BAL",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 3.7,
+   "upside": 4.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 57,
+   "name": "Tank Bigsby",
+   "team": "PHI",
+   "tier": 10,
+   "adp_text": "16.08",
+   "risk": 4.6,
+   "upside": 5.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 58,
+   "name": "Emmett Johnson",
+   "team": "KC",
+   "tier": 10,
+   "adp_text": "13.06",
+   "risk": 4.8,
+   "upside": 4.5
+  },
+  {
+   "position": "RB",
+   "rank_pos": 59,
+   "name": "Samaje Perine",
+   "team": "CIN",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 4.1,
+   "upside": 3.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 60,
+   "name": "Mike Washington Jr.",
+   "team": "LV",
+   "tier": 10,
+   "adp_text": "15.11",
+   "risk": 5.1,
+   "upside": 4.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 61,
+   "name": "Ty Johnson",
+   "team": "BUF",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 3.5,
+   "upside": 3.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 62,
+   "name": "MarShawn Lloyd",
+   "team": "GB",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 8.6,
+   "upside": 5.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 63,
+   "name": "James Conner",
+   "team": "ARI",
+   "tier": 10,
+   "adp_text": "13.08",
+   "risk": 4.3,
+   "upside": 3.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 64,
+   "name": "Nicholas Singleton",
+   "team": "TEN",
+   "tier": 10,
+   "adp_text": "15.08",
+   "risk": 5.4,
+   "upside": 5.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 65,
+   "name": "Braelon Allen",
+   "team": "NYJ",
+   "tier": 10,
+   "adp_text": "15.06",
+   "risk": 5.0,
+   "upside": 5.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 66,
+   "name": "George Holani",
+   "team": "SEA",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 4.5,
+   "upside": 2.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 1,
+   "name": "Puka Nacua",
+   "team": "LAR",
+   "tier": 1,
+   "adp_text": "1.05",
+   "risk": 4.9,
+   "upside": 9.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 2,
+   "name": "Ja'Marr Chase",
+   "team": "CIN",
+   "tier": 1,
+   "adp_text": "1.03",
+   "risk": 3.2,
+   "upside": 9.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 3,
+   "name": "Jaxon Smith-Njigba",
+   "team": "SEA",
+   "tier": 1,
+   "adp_text": "1.05",
+   "risk": 3.0,
+   "upside": 9.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 4,
+   "name": "Amon-Ra St. Brown",
+   "team": "DET",
+   "tier": 2,
+   "adp_text": "1.08",
+   "risk": 1.0,
+   "upside": 9.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 5,
+   "name": "CeeDee Lamb",
+   "team": "DAL",
+   "tier": 2,
+   "adp_text": "1.11",
+   "risk": 2.6,
+   "upside": 9.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 6,
+   "name": "Drake London",
+   "team": "ATL",
+   "tier": 3,
+   "adp_text": "2.02",
+   "risk": 3.3,
+   "upside": 9.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 7,
+   "name": "Justin Jefferson",
+   "team": "MIN",
+   "tier": 3,
+   "adp_text": "1.12",
+   "risk": 4.1,
+   "upside": 9.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 8,
+   "name": "Rashee Rice",
+   "team": "KC",
+   "tier": 4,
+   "adp_text": "2.11",
+   "risk": 9.5,
+   "upside": 8.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 9,
+   "name": "A.J. Brown",
+   "team": "NE",
+   "tier": 4,
+   "adp_text": "2.07",
+   "risk": 5.3,
+   "upside": 8.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 10,
+   "name": "Chris Olave",
+   "team": "NO",
+   "tier": 4,
+   "adp_text": "3.02",
+   "risk": 6.8,
+   "upside": 8.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 11,
+   "name": "George Pickens",
+   "team": "DAL",
+   "tier": 4,
+   "adp_text": "2.11",
+   "risk": 5.0,
+   "upside": 8.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 12,
+   "name": "Nico Collins",
+   "team": "HOU",
+   "tier": 4,
+   "adp_text": "3.01",
+   "risk": 4.6,
+   "upside": 8.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 13,
+   "name": "Garrett Wilson",
+   "team": "NYJ",
+   "tier": 4,
+   "adp_text": "4.05",
+   "risk": 4.9,
+   "upside": 8.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 14,
+   "name": "Malik Nabers",
+   "team": "NYG",
+   "tier": 4,
+   "adp_text": "3.03",
+   "risk": 6.3,
+   "upside": 9.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 15,
+   "name": "DeVonta Smith",
+   "team": "PHI",
+   "tier": 5,
+   "adp_text": "4.09",
+   "risk": 3.4,
+   "upside": 7.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 16,
+   "name": "Zay Flowers",
+   "team": "BAL",
+   "tier": 5,
+   "adp_text": "4.08",
+   "risk": 4.3,
+   "upside": 7.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 17,
+   "name": "Emeka Egbuka",
+   "team": "TB",
+   "tier": 5,
+   "adp_text": "4.10",
+   "risk": 5.5,
+   "upside": 8.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 18,
+   "name": "Tetairoa McMillan",
+   "team": "CAR",
+   "tier": 5,
+   "adp_text": "4.01",
+   "risk": 4.0,
+   "upside": 8.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 19,
+   "name": "Ladd McConkey",
+   "team": "LAC",
+   "tier": 5,
+   "adp_text": "4.06",
+   "risk": 4.4,
+   "upside": 6.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 20,
+   "name": "Tee Higgins",
+   "team": "CIN",
+   "tier": 5,
+   "adp_text": "3.12",
+   "risk": 6.1,
+   "upside": 8.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 21,
+   "name": "Jaylen Waddle",
+   "team": "DEN",
+   "tier": 6,
+   "adp_text": "4.10",
+   "risk": 4.0,
+   "upside": 5.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 22,
+   "name": "Christian Watson",
+   "team": "GB",
+   "tier": 6,
+   "adp_text": "6.08",
+   "risk": 6.6,
+   "upside": 8.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 23,
+   "name": "Terry McLaurin",
+   "team": "WAS",
+   "tier": 6,
+   "adp_text": "5.09",
+   "risk": 4.4,
+   "upside": 6.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 24,
+   "name": "Luther Burden III",
+   "team": "CHI",
+   "tier": 6,
+   "adp_text": "4.05",
+   "risk": 4.7,
+   "upside": 7.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 25,
+   "name": "Alec Pierce",
+   "team": "IND",
+   "tier": 6,
+   "adp_text": "7.12",
+   "risk": 5.8,
+   "upside": 6.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 26,
+   "name": "Carnell Tate",
+   "team": "TEN",
+   "tier": 6,
+   "adp_text": "6.03",
+   "risk": 5.9,
+   "upside": 6.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 27,
+   "name": "Mike Evans",
+   "team": "SF",
+   "tier": 6,
+   "adp_text": "5.10",
+   "risk": 6.0,
+   "upside": 7.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 28,
+   "name": "Jameson Williams",
+   "team": "DET",
+   "tier": 7,
+   "adp_text": "5.04",
+   "risk": 5.3,
+   "upside": 7.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 29,
+   "name": "Davante Adams",
+   "team": "LAR",
+   "tier": 7,
+   "adp_text": "4.11",
+   "risk": 5.2,
+   "upside": 7.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 30,
+   "name": "Brian Thomas Jr.",
+   "team": "JAX",
+   "tier": 7,
+   "adp_text": "6.10",
+   "risk": 6.1,
+   "upside": 7.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 31,
+   "name": "DJ Moore",
+   "team": "BUF",
+   "tier": 7,
+   "adp_text": "5.11",
+   "risk": 4.2,
+   "upside": 7.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 32,
+   "name": "Rome Odunze",
+   "team": "CHI",
+   "tier": 7,
+   "adp_text": "6.04",
+   "risk": 3.5,
+   "upside": 7.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 33,
+   "name": "DK Metcalf",
+   "team": "PIT",
+   "tier": 8,
+   "adp_text": "7.02",
+   "risk": 4.4,
+   "upside": 7.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 34,
+   "name": "Marvin Harrison Jr.",
+   "team": "ARI",
+   "tier": 8,
+   "adp_text": "7.04",
+   "risk": 6.2,
+   "upside": 7.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 35,
+   "name": "Parker Washington",
+   "team": "JAX",
+   "tier": 8,
+   "adp_text": "8.05",
+   "risk": 4.2,
+   "upside": 5.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 36,
+   "name": "Quentin Johnston",
+   "team": "LAC",
+   "tier": 8,
+   "adp_text": "9.07",
+   "risk": 6.3,
+   "upside": 6.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 37,
+   "name": "Michael Pittman Jr.",
+   "team": "PIT",
+   "tier": 8,
+   "adp_text": "9.07",
+   "risk": 3.5,
+   "upside": 4.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 38,
+   "name": "Jordyn Tyson",
+   "team": "NO",
+   "tier": 8,
+   "adp_text": "6.09",
+   "risk": 5.4,
+   "upside": 7.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 39,
+   "name": "Wan'Dale Robinson",
+   "team": "TEN",
+   "tier": 8,
+   "adp_text": "9.07",
+   "risk": 4.6,
+   "upside": 4.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 40,
+   "name": "Michael Wilson",
+   "team": "ARI",
+   "tier": 8,
+   "adp_text": "7.08",
+   "risk": 3.8,
+   "upside": 6.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 41,
+   "name": "Josh Downs",
+   "team": "IND",
+   "tier": 9,
+   "adp_text": "11.05",
+   "risk": 4.2,
+   "upside": 7.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 42,
+   "name": "Courtland Sutton",
+   "team": "DEN",
+   "tier": 9,
+   "adp_text": "7.06",
+   "risk": 3.0,
+   "upside": 4.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 43,
+   "name": "Chris Godwin Jr.",
+   "team": "TB",
+   "tier": 9,
+   "adp_text": "8.09",
+   "risk": 4.5,
+   "upside": 6.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 44,
+   "name": "Jordan Addison",
+   "team": "MIN",
+   "tier": 9,
+   "adp_text": "9.05",
+   "risk": 3.7,
+   "upside": 7.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 45,
+   "name": "Jakobi Meyers",
+   "team": "JAX",
+   "tier": 9,
+   "adp_text": "8.04",
+   "risk": 2.7,
+   "upside": 5.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 46,
+   "name": "Makai Lemon",
+   "team": "PHI",
+   "tier": 9,
+   "adp_text": "7.05",
+   "risk": 5.6,
+   "upside": 6.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 47,
+   "name": "Romeo Doubs",
+   "team": "NE",
+   "tier": 9,
+   "adp_text": "10.07",
+   "risk": 3.9,
+   "upside": 6.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 48,
+   "name": "Deebo Samuel Sr.",
+   "team": "SF",
+   "tier": 9,
+   "adp_text": "14.08",
+   "risk": 6.0,
+   "upside": 4.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 49,
+   "name": "Jayden Reed",
+   "team": "GB",
+   "tier": 9,
+   "adp_text": "10.08",
+   "risk": 4.2,
+   "upside": 5.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 50,
+   "name": "Khalil Shakir",
+   "team": "BUF",
+   "tier": 10,
+   "adp_text": "12.02",
+   "risk": 2.8,
+   "upside": 5.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 51,
+   "name": "Xavier Worthy",
+   "team": "KC",
+   "tier": 10,
+   "adp_text": "12.03",
+   "risk": 6.2,
+   "upside": 6.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 52,
+   "name": "Rashid Shaheed",
+   "team": "SEA",
+   "tier": 10,
+   "adp_text": "13.08",
+   "risk": 4.4,
+   "upside": 5.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 53,
+   "name": "KC Concepcion",
+   "team": "CLE",
+   "tier": 10,
+   "adp_text": "12.11",
+   "risk": 5.9,
+   "upside": 6.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 54,
+   "name": "Jayden Higgins",
+   "team": "HOU",
+   "tier": 10,
+   "adp_text": "11.11",
+   "risk": 3.9,
+   "upside": 5.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 55,
+   "name": "Matthew Golden",
+   "team": "GB",
+   "tier": 10,
+   "adp_text": "12.02",
+   "risk": 5.2,
+   "upside": 6.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 56,
+   "name": "Malik Washington",
+   "team": "MIA",
+   "tier": 10,
+   "adp_text": "-",
+   "risk": 4.6,
+   "upside": 5.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 57,
+   "name": "Jalen Coker",
+   "team": "CAR",
+   "tier": 10,
+   "adp_text": "12.04",
+   "risk": 3.7,
+   "upside": 5.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 58,
+   "name": "Tre Tucker",
+   "team": "LV",
+   "tier": 10,
+   "adp_text": "18.03",
+   "risk": 4.5,
+   "upside": 4.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 59,
+   "name": "Omar Cooper Jr.",
+   "team": "NYJ",
+   "tier": 10,
+   "adp_text": "13.05",
+   "risk": 6.7,
+   "upside": 5.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 60,
+   "name": "Jauan Jennings",
+   "team": "MIN",
+   "tier": 10,
+   "adp_text": "13.02",
+   "risk": 6.4,
+   "upside": 5.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 61,
+   "name": "De'Zhaun Stribling",
+   "team": "SF",
+   "tier": 10,
+   "adp_text": "17.10",
+   "risk": 4.7,
+   "upside": 4.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 62,
+   "name": "Jerry Jeudy",
+   "team": "CLE",
+   "tier": 10,
+   "adp_text": "15.06",
+   "risk": 5.5,
+   "upside": 5.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 63,
+   "name": "Antonio Williams",
+   "team": "WAS",
+   "tier": 11,
+   "adp_text": "14.12",
+   "risk": 5.3,
+   "upside": 5.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 64,
+   "name": "Calvin Ridley",
+   "team": "TEN",
+   "tier": 11,
+   "adp_text": "19.12",
+   "risk": 5.2,
+   "upside": 4.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 65,
+   "name": "Travis Hunter",
+   "team": "JAX",
+   "tier": 11,
+   "adp_text": "14.04",
+   "risk": 8.3,
+   "upside": 6.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 1,
+   "name": "Trey McBride",
+   "team": "ARI",
+   "tier": 1,
+   "adp_text": "2.07",
+   "risk": 4.2,
+   "upside": 8.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 2,
+   "name": "Brock Bowers",
+   "team": "LV",
+   "tier": 1,
+   "adp_text": "2.08",
+   "risk": 2.5,
+   "upside": 9.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 3,
+   "name": "Tyler Warren",
+   "team": "IND",
+   "tier": 2,
+   "adp_text": "5.02",
+   "risk": 3.4,
+   "upside": 8.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 4,
+   "name": "Colston Loveland",
+   "team": "CHI",
+   "tier": 2,
+   "adp_text": "4.05",
+   "risk": 4.2,
+   "upside": 9.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 5,
+   "name": "George Kittle",
+   "team": "SF",
+   "tier": 3,
+   "adp_text": "9.01",
+   "risk": 8.0,
+   "upside": 8.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 6,
+   "name": "Harold Fannin Jr.",
+   "team": "CLE",
+   "tier": 3,
+   "adp_text": "6.03",
+   "risk": 4.1,
+   "upside": 8.6
+  },
+  {
+   "position": "TE",
+   "rank_pos": 7,
+   "name": "Sam LaPorta",
+   "team": "DET",
+   "tier": 3,
+   "adp_text": "7.04",
+   "risk": 4.4,
+   "upside": 6.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 8,
+   "name": "Tucker Kraft",
+   "team": "GB",
+   "tier": 3,
+   "adp_text": "6.07",
+   "risk": 5.5,
+   "upside": 7.9
+  },
+  {
+   "position": "TE",
+   "rank_pos": 9,
+   "name": "Kyle Pitts Sr.",
+   "team": "ATL",
+   "tier": 3,
+   "adp_text": "6.11",
+   "risk": 5.8,
+   "upside": 6.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 10,
+   "name": "Travis Kelce",
+   "team": "KC",
+   "tier": 3,
+   "adp_text": "9.11",
+   "risk": 4.8,
+   "upside": 5.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 11,
+   "name": "Jake Ferguson",
+   "team": "DAL",
+   "tier": 4,
+   "adp_text": "9.08",
+   "risk": 5.3,
+   "upside": 6.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 12,
+   "name": "Dalton Kincaid",
+   "team": "BUF",
+   "tier": 4,
+   "adp_text": "9.01",
+   "risk": 5.8,
+   "upside": 7.7
+  },
+  {
+   "position": "TE",
+   "rank_pos": 13,
+   "name": "Brenton Strange",
+   "team": "JAX",
+   "tier": 4,
+   "adp_text": "11.09",
+   "risk": 3.6,
+   "upside": 5.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 14,
+   "name": "Dallas Goedert",
+   "team": "PHI",
+   "tier": 4,
+   "adp_text": "10.01",
+   "risk": 5.1,
+   "upside": 6.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 15,
+   "name": "Mark Andrews",
+   "team": "BAL",
+   "tier": 4,
+   "adp_text": "10.03",
+   "risk": 4.0,
+   "upside": 5.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 16,
+   "name": "Dalton Schultz",
+   "team": "HOU",
+   "tier": 4,
+   "adp_text": "12.05",
+   "risk": 3.1,
+   "upside": 4.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 17,
+   "name": "Chig Okonkwo",
+   "team": "WAS",
+   "tier": 5,
+   "adp_text": "13.02",
+   "risk": 3.8,
+   "upside": 5.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 18,
+   "name": "Hunter Henry",
+   "team": "NE",
+   "tier": 5,
+   "adp_text": "9.10",
+   "risk": 3.3,
+   "upside": 5.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 19,
+   "name": "Oronde Gadsden",
+   "team": "LAC",
+   "tier": 5,
+   "adp_text": "8.11",
+   "risk": 4.5,
+   "upside": 6.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 20,
+   "name": "T.J. Hockenson",
+   "team": "MIN",
+   "tier": 5,
+   "adp_text": "12.09",
+   "risk": 4.1,
+   "upside": 5.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 21,
+   "name": "Isaiah Likely",
+   "team": "NYG",
+   "tier": 5,
+   "adp_text": "10.09",
+   "risk": 3.8,
+   "upside": 5.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 22,
+   "name": "Kenyon Sadiq",
+   "team": "NYJ",
+   "tier": 5,
+   "adp_text": "10.10",
+   "risk": 4.6,
+   "upside": 5.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 23,
+   "name": "Pat Freiermuth",
+   "team": "PIT",
+   "tier": 5,
+   "adp_text": "-",
+   "risk": 4.2,
+   "upside": 3.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 24,
+   "name": "Juwan Johnson",
+   "team": "NO",
+   "tier": 5,
+   "adp_text": "12.03",
+   "risk": 3.8,
+   "upside": 5.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 25,
+   "name": "Greg Dulcich",
+   "team": "MIA",
+   "tier": 5,
+   "adp_text": "-",
+   "risk": 4.8,
+   "upside": 5.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 26,
+   "name": "Cade Otton",
+   "team": "TB",
+   "tier": 5,
+   "adp_text": "14.07",
+   "risk": 3.8,
+   "upside": 3.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 27,
+   "name": "AJ Barner",
+   "team": "SEA",
+   "tier": 6,
+   "adp_text": "13.06",
+   "risk": 3.9,
+   "upside": 4.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 28,
+   "name": "Colby Parkinson",
+   "team": "LAR",
+   "tier": 6,
+   "adp_text": "17.08",
+   "risk": 4.1,
+   "upside": 4.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 29,
+   "name": "David Njoku",
+   "team": "LAC",
+   "tier": 6,
+   "adp_text": "15.04",
+   "risk": 5.3,
+   "upside": 3.9
+  },
+  {
+   "position": "TE",
+   "rank_pos": 30,
+   "name": "Mike Gesicki",
+   "team": "CIN",
+   "tier": 6,
+   "adp_text": "-",
+   "risk": 3.6,
+   "upside": 5.6
+  },
+  {
+   "position": "TE",
+   "rank_pos": 31,
+   "name": "Cole Kmet",
+   "team": "CHI",
+   "tier": 6,
+   "adp_text": "-",
+   "risk": 3.5,
+   "upside": 3.7
+  },
+  {
+   "position": "TE",
+   "rank_pos": 32,
+   "name": "Gunnar Helm",
+   "team": "TEN",
+   "tier": 6,
+   "adp_text": "17.09",
+   "risk": 4.2,
+   "upside": 4.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 33,
+   "name": "Evan Engram",
+   "team": "DEN",
+   "tier": 6,
+   "adp_text": "-",
+   "risk": 2.7,
+   "upside": 1.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 34,
+   "name": "Eli Stowers",
+   "team": "PHI",
+   "tier": 7,
+   "adp_text": "15.06",
+   "risk": 6.3,
+   "upside": 5.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 35,
+   "name": "Mason Taylor",
+   "team": "NYJ",
+   "tier": 8,
+   "adp_text": "19.08",
+   "risk": 4.1,
+   "upside": 3.6
+  },
+  {
+   "position": "TE",
+   "rank_pos": 36,
+   "name": "Michael Mayer",
+   "team": "LV",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.8,
+   "upside": 2.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 37,
+   "name": "Dawson Knox",
+   "team": "BUF",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 2.5,
+   "upside": 2.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 38,
+   "name": "Ja'Tavion Sanders",
+   "team": "CAR",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.0,
+   "upside": 3.9
+  },
+  {
+   "position": "TE",
+   "rank_pos": 39,
+   "name": "Luke Musgrave",
+   "team": "GB",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.7,
+   "upside": 3.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 40,
+   "name": "Terrance Ferguson",
+   "team": "LAR",
+   "tier": 8,
+   "adp_text": "14.03",
+   "risk": 5.1,
+   "upside": 4.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 41,
+   "name": "Theo Johnson",
+   "team": "NYG",
+   "tier": 8,
+   "adp_text": "20.04",
+   "risk": 4.2,
+   "upside": 4.8
+  },
+  {
+   "position": "TE",
+   "rank_pos": 42,
+   "name": "Noah Gray",
+   "team": "KC",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.3,
+   "upside": 2.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 43,
+   "name": "Tommy Tremble",
+   "team": "CAR",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 3.5,
+   "upside": 3.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 44,
+   "name": "Elijah Arroyo",
+   "team": "SEA",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.5,
+   "upside": 4.4
+  },
+  {
+   "position": "TE",
+   "rank_pos": 45,
+   "name": "Darnell Washington",
+   "team": "PIT",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.6,
+   "upside": 3.1
+  },
+  {
+   "position": "TE",
+   "rank_pos": 46,
+   "name": "Max Klare",
+   "team": "LAR",
+   "tier": 8,
+   "adp_text": "21.09",
+   "risk": 5.4,
+   "upside": 4.6
+  },
+  {
+   "position": "TE",
+   "rank_pos": 47,
+   "name": "Jake Tonges",
+   "team": "SF",
+   "tier": 8,
+   "adp_text": "16.11",
+   "risk": 4.0,
+   "upside": 2.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 48,
+   "name": "Justin Joly",
+   "team": "DEN",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 0.5,
+   "upside": 0.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 49,
+   "name": "Ben Sinnott",
+   "team": "WAS",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 8.0,
+   "upside": 5.9
+  },
+  {
+   "position": "TE",
+   "rank_pos": 50,
+   "name": "Noah Fant",
+   "team": "NO",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 4.8,
+   "upside": 3.3
+  },
+  {
+   "position": "TE",
+   "rank_pos": 51,
+   "name": "Marlin Klein",
+   "team": "HOU",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 6.6,
+   "upside": 5.2
+  },
+  {
+   "position": "TE",
+   "rank_pos": 52,
+   "name": "Nate Boerkircher",
+   "team": "JAX",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 1.5,
+   "upside": 1.5
+  },
+  {
+   "position": "TE",
+   "rank_pos": 53,
+   "name": "Oscar Delp",
+   "team": "NO",
+   "tier": 8,
+   "adp_text": "-",
+   "risk": 6.9,
+   "upside": 3.8
+  },
+  {
+   "position": "DST",
+   "rank_pos": 1,
+   "name": "Houston Texans",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 2,
+   "name": "Denver Broncos",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 3,
+   "name": "Seattle Seahawks",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 4,
+   "name": "Philadelphia Eagles",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 5,
+   "name": "Los Angeles Rams",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 6,
+   "name": "New England Patriots",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 7,
+   "name": "Minnesota Vikings",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 8,
+   "name": "Jacksonville Jaguars",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 9,
+   "name": "Cleveland Browns",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 10,
+   "name": "Pittsburgh Steelers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 11,
+   "name": "Los Angeles Chargers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 12,
+   "name": "Green Bay Packers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 13,
+   "name": "Baltimore Ravens",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 14,
+   "name": "Kansas City Chiefs",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 15,
+   "name": "Buffalo Bills",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 16,
+   "name": "Detroit Lions",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 17,
+   "name": "Atlanta Falcons",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 18,
+   "name": "San Francisco 49ers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 19,
+   "name": "New York Giants",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 20,
+   "name": "Indianapolis Colts",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 21,
+   "name": "Chicago Bears",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 22,
+   "name": "New Orleans Saints",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 23,
+   "name": "Carolina Panthers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 24,
+   "name": "Dallas Cowboys",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 25,
+   "name": "Tampa Bay Buccaneers",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 26,
+   "name": "Washington Commanders",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 27,
+   "name": "Miami Dolphins",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 28,
+   "name": "Cincinnati Bengals",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 29,
+   "name": "Tennessee Titans",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 30,
+   "name": "Las Vegas Raiders",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 31,
+   "name": "New York Jets",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "DST",
+   "rank_pos": 32,
+   "name": "Arizona Cardinals",
+   "team": "",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 1,
+   "name": "Brandon Aubrey",
+   "team": "DAL",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 2,
+   "name": "Cameron Dicker",
+   "team": "LAC",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 3,
+   "name": "Ka'imi Fairbairn",
+   "team": "HOU",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 4,
+   "name": "Jason Myers",
+   "team": "SEA",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 5,
+   "name": "Cam Little",
+   "team": "JAX",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 6,
+   "name": "Eddy Pi\u00f1eiro",
+   "team": "SF",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 7,
+   "name": "Evan McPherson",
+   "team": "CIN",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 8,
+   "name": "Tyler Loop",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 9,
+   "name": "Chase McLaughlin",
+   "team": "TB",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 10,
+   "name": "Andy Borregales",
+   "team": "NE",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 11,
+   "name": "Cairo Santos",
+   "team": "CHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 12,
+   "name": "Harrison Butker",
+   "team": "KC",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 13,
+   "name": "Jake Bates",
+   "team": "DET",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 14,
+   "name": "Wil Lutz",
+   "team": "DEN",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 15,
+   "name": "Will Reichard",
+   "team": "MIN",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 16,
+   "name": "Chris Boswell",
+   "team": "PIT",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 17,
+   "name": "Harrison Mevis",
+   "team": "LAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 18,
+   "name": "Charlie Smyth",
+   "team": "NO",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 19,
+   "name": "Jake Elliott",
+   "team": "PHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 20,
+   "name": "Zane Gonzalez",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 21,
+   "name": "Blake Grupe",
+   "team": "IND",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 22,
+   "name": "Chad Ryland",
+   "team": "ARI",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 23,
+   "name": "Nick Folk",
+   "team": "ATL",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 24,
+   "name": "Joey Slye",
+   "team": "TEN",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 25,
+   "name": "Tyler Bass",
+   "team": "BUF",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 26,
+   "name": "Ryan Fitzgerald",
+   "team": "CAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 27,
+   "name": "Ben Sauls",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 28,
+   "name": "Trey Smack",
+   "team": "GB",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 29,
+   "name": "Jake Moody",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 30,
+   "name": "Jason Sanders",
+   "team": "NYJ",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 31,
+   "name": "Andre Szmyt",
+   "team": "CLE",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 32,
+   "name": "Cade York",
+   "team": "NYJ",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "K",
+   "rank_pos": 33,
+   "name": "Matt Gay",
+   "team": "LV",
+   "tier": null,
+   "adp_text": null,
+   "risk": null,
+   "upside": null
+  },
+  {
+   "position": "RB",
+   "rank_pos": 67,
+   "name": "Chris Brooks",
+   "team": "GB",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.0,
+   "upside": 2.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 68,
+   "name": "Isaiah Davis",
+   "team": "NYJ",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.2,
+   "upside": 3.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 69,
+   "name": "DJ Giddens",
+   "team": "IND",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.1,
+   "upside": 3.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 70,
+   "name": "Kaelon Black",
+   "team": "SF",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.7,
+   "upside": 4.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 71,
+   "name": "Jerome Ford",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.8,
+   "upside": 2.3
+  },
+  {
+   "position": "RB",
+   "rank_pos": 72,
+   "name": "Devin Neal",
+   "team": "NO",
+   "tier": null,
+   "adp_text": "18.08",
+   "risk": 4.8,
+   "upside": 2.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 73,
+   "name": "Brashard Smith",
+   "team": "KC",
+   "tier": null,
+   "adp_text": "19.10",
+   "risk": 4.8,
+   "upside": 3.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 74,
+   "name": "LeQuint Allen Jr.",
+   "team": "JAX",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.9,
+   "upside": 3.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 75,
+   "name": "Jaylen Wright",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": "18.11",
+   "risk": 5.0,
+   "upside": 4.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 76,
+   "name": "Ray Davis",
+   "team": "BUF",
+   "tier": null,
+   "adp_text": "18.05",
+   "risk": 3.8,
+   "upside": 4.7
+  },
+  {
+   "position": "RB",
+   "rank_pos": 77,
+   "name": "Emanuel Wilson",
+   "team": "SEA",
+   "tier": null,
+   "adp_text": "17.11",
+   "risk": 4.9,
+   "upside": 3.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 78,
+   "name": "Devin Singletary",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.9,
+   "upside": 2.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 79,
+   "name": "Sean Tucker",
+   "team": "TB",
+   "tier": null,
+   "adp_text": "17.01",
+   "risk": 4.8,
+   "upside": 3.2
+  },
+  {
+   "position": "RB",
+   "rank_pos": 80,
+   "name": "Jaydon Blue",
+   "team": "DAL",
+   "tier": null,
+   "adp_text": "20.09",
+   "risk": 5.0,
+   "upside": 4.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 81,
+   "name": "Kaytron Allen",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": "16.01",
+   "risk": 5.3,
+   "upside": 3.5
+  },
+  {
+   "position": "RB",
+   "rank_pos": 82,
+   "name": "Emari Demercado",
+   "team": "KC",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.3,
+   "upside": 2.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 83,
+   "name": "Trevor Etienne",
+   "team": "CAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.3,
+   "upside": 3.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 84,
+   "name": "Will Shipley",
+   "team": "PHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.6,
+   "upside": 2.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 85,
+   "name": "AJ Dillon",
+   "team": "CAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.3,
+   "upside": 2.0
+  },
+  {
+   "position": "RB",
+   "rank_pos": 86,
+   "name": "Kaleb Johnson",
+   "team": "PIT",
+   "tier": null,
+   "adp_text": "19.02",
+   "risk": 5.2,
+   "upside": 3.1
+  },
+  {
+   "position": "RB",
+   "rank_pos": 87,
+   "name": "Ollie Gordon II",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.1,
+   "upside": 2.9
+  },
+  {
+   "position": "RB",
+   "rank_pos": 88,
+   "name": "Adam Randall",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.7,
+   "upside": 3.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 89,
+   "name": "Demond Claiborne",
+   "team": "MIN",
+   "tier": null,
+   "adp_text": "19.02",
+   "risk": 5.3,
+   "upside": 4.8
+  },
+  {
+   "position": "RB",
+   "rank_pos": 90,
+   "name": "Tahj Brooks",
+   "team": "CIN",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.2,
+   "upside": 3.6
+  },
+  {
+   "position": "RB",
+   "rank_pos": 91,
+   "name": "Audric Estim\u00e9",
+   "team": "NO",
+   "tier": null,
+   "adp_text": "20.09",
+   "risk": 4.0,
+   "upside": 3.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 66,
+   "name": "Cooper Kupp",
+   "team": "SEA",
+   "tier": null,
+   "adp_text": "20.07",
+   "risk": 5.3,
+   "upside": 3.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 67,
+   "name": "Adonai Mitchell",
+   "team": "NYJ",
+   "tier": null,
+   "adp_text": "15.10",
+   "risk": 4.6,
+   "upside": 4.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 68,
+   "name": "Germie Bernard",
+   "team": "PIT",
+   "tier": null,
+   "adp_text": "19.05",
+   "risk": 5.4,
+   "upside": 4.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 69,
+   "name": "Denzel Boston",
+   "team": "CLE",
+   "tier": null,
+   "adp_text": "13.04",
+   "risk": 4.7,
+   "upside": 4.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 70,
+   "name": "Keon Coleman",
+   "team": "BUF",
+   "tier": null,
+   "adp_text": "20.07",
+   "risk": 5.4,
+   "upside": 5.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 71,
+   "name": "Jalen Nailor",
+   "team": "LV",
+   "tier": null,
+   "adp_text": "14.11",
+   "risk": 4.9,
+   "upside": 3.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 72,
+   "name": "Tank Dell",
+   "team": "HOU",
+   "tier": null,
+   "adp_text": "18.03",
+   "risk": 8.5,
+   "upside": 6.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 73,
+   "name": "Ryan Flournoy",
+   "team": "DAL",
+   "tier": null,
+   "adp_text": "19.12",
+   "risk": 4.3,
+   "upside": 4.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 74,
+   "name": "Caleb Douglas",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.3,
+   "upside": 4.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 75,
+   "name": "DeMario Douglas",
+   "team": "NE",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.8,
+   "upside": 4.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 76,
+   "name": "Chris Bell",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": "20.03",
+   "risk": 6.3,
+   "upside": 5.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 77,
+   "name": "Darnell Mooney",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": "19.05",
+   "risk": 4.8,
+   "upside": 3.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 78,
+   "name": "Tre' Harris",
+   "team": "LAC",
+   "tier": null,
+   "adp_text": "17.03",
+   "risk": 4.3,
+   "upside": 5.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 79,
+   "name": "Jalen McMillan",
+   "team": "TB",
+   "tier": null,
+   "adp_text": "14.08",
+   "risk": 3.5,
+   "upside": 4.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 80,
+   "name": "Ted Hurst",
+   "team": "TB",
+   "tier": null,
+   "adp_text": "19.08",
+   "risk": 5.3,
+   "upside": 4.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 81,
+   "name": "Jack Bech",
+   "team": "LV",
+   "tier": null,
+   "adp_text": "20.10",
+   "risk": 4.6,
+   "upside": 5.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 82,
+   "name": "Kayshon Boutte",
+   "team": "NE",
+   "tier": null,
+   "adp_text": "15.11",
+   "risk": 4.1,
+   "upside": 5.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 83,
+   "name": "Darius Slayton",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.9,
+   "upside": 3.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 84,
+   "name": "Troy Franklin",
+   "team": "DEN",
+   "tier": null,
+   "adp_text": "16.05",
+   "risk": 2.3,
+   "upside": 2.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 85,
+   "name": "Isaac TeSlaa",
+   "team": "DET",
+   "tier": null,
+   "adp_text": "17.07",
+   "risk": 7.8,
+   "upside": 6.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 86,
+   "name": "Jalen Tolbert",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.4,
+   "upside": 3.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 87,
+   "name": "Tory Horton",
+   "team": "SEA",
+   "tier": null,
+   "adp_text": "20.01",
+   "risk": 5.1,
+   "upside": 4.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 88,
+   "name": "Devaughn Vele",
+   "team": "NO",
+   "tier": null,
+   "adp_text": "20.12",
+   "risk": 4.8,
+   "upside": 4.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 89,
+   "name": "Tyquan Thornton",
+   "team": "KC",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.8,
+   "upside": 3.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 90,
+   "name": "Treylon Burks",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.7,
+   "upside": 3.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 91,
+   "name": "Christian Kirk",
+   "team": "SF",
+   "tier": null,
+   "adp_text": "21.02",
+   "risk": 5.8,
+   "upside": 3.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 92,
+   "name": "Ricky Pearsall",
+   "team": "SF",
+   "tier": null,
+   "adp_text": "9.04",
+   "risk": 7.7,
+   "upside": 3.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 93,
+   "name": "Elic Ayomanor",
+   "team": "TEN",
+   "tier": null,
+   "adp_text": "17.08",
+   "risk": 4.7,
+   "upside": 4.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 94,
+   "name": "Rashod Bateman",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": "20.05",
+   "risk": 4.5,
+   "upside": 4.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 95,
+   "name": "Pat Bryant",
+   "team": "DEN",
+   "tier": null,
+   "adp_text": "19.07",
+   "risk": 2.3,
+   "upside": 3.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 96,
+   "name": "Andrei Iosivas",
+   "team": "CIN",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.7,
+   "upside": 3.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 97,
+   "name": "Dontayvion Wicks",
+   "team": "PHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.3,
+   "upside": 3.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 98,
+   "name": "Chimere Dike",
+   "team": "TEN",
+   "tier": null,
+   "adp_text": "20.01",
+   "risk": 5.1,
+   "upside": 3.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 99,
+   "name": "Jahan Dotson",
+   "team": "ATL",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.5,
+   "upside": 2.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 100,
+   "name": "Kyle Williams",
+   "team": "NE",
+   "tier": null,
+   "adp_text": "19.06",
+   "risk": 5.0,
+   "upside": 5.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 101,
+   "name": "Zachariah Branch",
+   "team": "ATL",
+   "tier": null,
+   "adp_text": "15.12",
+   "risk": 4.3,
+   "upside": 5.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 102,
+   "name": "Xavier Legette",
+   "team": "CAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.7,
+   "upside": 4.2
+  },
+  {
+   "position": "WR",
+   "rank_pos": 103,
+   "name": "Jaylin Noel",
+   "team": "HOU",
+   "tier": null,
+   "adp_text": "18.10",
+   "risk": 4.2,
+   "upside": 3.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 104,
+   "name": "Marvin Mims Jr.",
+   "team": "DEN",
+   "tier": null,
+   "adp_text": "19.04",
+   "risk": 2.7,
+   "upside": 1.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 105,
+   "name": "Tez Johnson",
+   "team": "TB",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.6,
+   "upside": 3.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 106,
+   "name": "Kendrick Bourne",
+   "team": "ARI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.7,
+   "upside": 2.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 107,
+   "name": "Ja'Kobi Lane",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": "17.06",
+   "risk": 4.7,
+   "upside": 5.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 108,
+   "name": "Malachi Fields",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": "21.02",
+   "risk": 5.4,
+   "upside": 3.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 109,
+   "name": "Mack Hollins",
+   "team": "NE",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.3,
+   "upside": 3.4
+  },
+  {
+   "position": "WR",
+   "rank_pos": 110,
+   "name": "Jaylin Lane",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.0,
+   "upside": 2.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 111,
+   "name": "Elijah Sarratt",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": "20.01",
+   "risk": 4.5,
+   "upside": 4.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 112,
+   "name": "Kalif Raymond",
+   "team": "CHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.7,
+   "upside": 3.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 113,
+   "name": "Roman Wilson",
+   "team": "PIT",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.1,
+   "upside": 2.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 114,
+   "name": "Olamide Zaccheaus",
+   "team": "ATL",
+   "tier": null,
+   "adp_text": null,
+   "risk": 2.5,
+   "upside": 2.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 115,
+   "name": "Chris Brazzell II",
+   "team": "CAR",
+   "tier": null,
+   "adp_text": "20.03",
+   "risk": 6.1,
+   "upside": 5.1
+  },
+  {
+   "position": "WR",
+   "rank_pos": 116,
+   "name": "Jordan Whittington",
+   "team": "LAR",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.7,
+   "upside": 3.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 117,
+   "name": "Xavier Hutchinson",
+   "team": "HOU",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.1,
+   "upside": 2.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 118,
+   "name": "Dont'e Thornton Jr.",
+   "team": "LV",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.6,
+   "upside": 3.5
+  },
+  {
+   "position": "WR",
+   "rank_pos": 119,
+   "name": "Hollywood Brown",
+   "team": "PHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.1,
+   "upside": 3.7
+  },
+  {
+   "position": "WR",
+   "rank_pos": 120,
+   "name": "Brenen Thompson",
+   "team": "LAC",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.6,
+   "upside": 3.8
+  },
+  {
+   "position": "WR",
+   "rank_pos": 121,
+   "name": "Van Jefferson",
+   "team": "WAS",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.0,
+   "upside": 2.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 122,
+   "name": "Tutu Atwell",
+   "team": "MIA",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.0,
+   "upside": 2.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 123,
+   "name": "Skyler Bell",
+   "team": "BUF",
+   "tier": null,
+   "adp_text": null,
+   "risk": 3.5,
+   "upside": 3.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 124,
+   "name": "Calvin Austin III",
+   "team": "NYG",
+   "tier": null,
+   "adp_text": null,
+   "risk": 5.0,
+   "upside": 2.9
+  },
+  {
+   "position": "WR",
+   "rank_pos": 125,
+   "name": "Devontez Walker",
+   "team": "BAL",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.3,
+   "upside": 3.0
+  },
+  {
+   "position": "WR",
+   "rank_pos": 126,
+   "name": "Cedric Tillman",
+   "team": "CLE",
+   "tier": null,
+   "adp_text": null,
+   "risk": 4.5,
+   "upside": 3.6
+  },
+  {
+   "position": "WR",
+   "rank_pos": 127,
+   "name": "Bryce Lance",
+   "team": "NO",
+   "tier": null,
+   "adp_text": null,
+   "risk": 7.9,
+   "upside": 5.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 128,
+   "name": "Zavion Thomas",
+   "team": "CHI",
+   "tier": null,
+   "adp_text": null,
+   "risk": 6.3,
+   "upside": 4.3
+  },
+  {
+   "position": "WR",
+   "rank_pos": 129,
+   "name": "Kendrick Law",
+   "team": "DET",
+   "tier": null,
+   "adp_text": null,
+   "risk": 7.5,
+   "upside": 2.2
+  }
+ ]
+}

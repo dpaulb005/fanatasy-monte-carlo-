@@ -1,0 +1,24 @@
+# Runtime + dev dependencies for the fantasy analytics backend.
+# Pinned to the versions validated during Phase 2 scaffolding.
+
+# --- Web / API ---
+Django==5.1.15
+djangorestframework==3.17.1
+django-cors-headers==4.9.0
+django-environ==0.14.0
+psycopg[binary]==3.3.4
+
+# --- Data ingestion (added in Phase 3; pinned per DATA_SOURCES.md) ---
+espn-api==0.46.0          # ESPN Fantasy client (MIT); used by live sync_espn
+# nflreadpy>=0.1          # public NFL data (successor to nfl_data_py); optional
+
+# --- Analytics (added in Phase 4) ---
+# pandas>=2.2             # confined to league/analytics/
+
+# --- Dev / test / quality ---
+pytest==9.1.1
+pytest-django==4.12.0
+ruff==0.15.21
+mypy==2.3.0
+django-stubs==6.0.6
+djangorestframework-stubs==3.17.0
