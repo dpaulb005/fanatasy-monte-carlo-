@@ -69,6 +69,20 @@ python -m nflsim chart --top 30         # PNG of the top of the board
 python -m nflsim why "Travis Kelce"     # the chain behind one projection
 ```
 
+`app-export` is the stable boundary for web applications. It writes strict JSON rather than
+exposing the large NumPy archive or Python pickle model, and includes schema version, scoring,
+league shape, generation time and simulation count. The payload preserves the analyses that
+need coherent shared worlds—season-specific replacement value, positional-title equity,
+conditional handcuff value, ceiling anatomy, weekly schedule effects and pairwise co-boom lift.
+
+```bash
+python -m nflsim app-export --teams 12 --scoring ppr \
+  --out artifacts/application-snapshot.json
+cd /Users/davidbrown/dev/fantasy_analysis_app/backend
+.venv/bin/python manage.py import_nflsim \
+  "/Users/davidbrown/dev/monte-fantasy /repo/artifacts/application-snapshot.json"
+```
+
 The HTML report includes a **draft decision lab**. Select two to four top-80
 players to compare the probability that each creates more value than the other
 after replacement level is recalculated inside the same simulated season. It
