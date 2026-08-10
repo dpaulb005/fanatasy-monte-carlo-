@@ -10,6 +10,11 @@ across ten thousand versions of the year.
 Nothing here is scraped from anyone else's projections. Every number is fit from primary
 data.
 
+The repository now includes the complete private league application in
+[`fantasy_analysis_app/`](fantasy_analysis_app/): Django/DRF, Vue 3, historical ESPN league
+analytics, the live draft room, and the versioned bridge to nflsim's joint-season output. The
+canonical product format is **12-team full PPR**.
+
 **How this compares.** A survey of public and commercial systems found that play-level
 simulation does exist — [SaberSim](https://www.sabersim.com/how-it-works) builds games one
 play at a time, and Establish The Run runs 20,000 play-level sims per slate — but both are
@@ -78,10 +83,43 @@ conditional handcuff value, ceiling anatomy, weekly schedule effects and pairwis
 ```bash
 python -m nflsim app-export --teams 12 --scoring ppr \
   --out artifacts/application-snapshot.json
-cd /Users/davidbrown/dev/fantasy_analysis_app/backend
+cd fantasy_analysis_app/backend
 .venv/bin/python manage.py import_nflsim \
-  "/Users/davidbrown/dev/monte-fantasy /repo/artifacts/application-snapshot.json"
+  ../../artifacts/application-snapshot.json
 ```
+
+## Run the integrated application
+
+Set up the two runtimes once, then use the root workflow to generate and import the exact
+12-team PPR simulation snapshot:
+
+```bash
+python3 -m venv fantasy_analysis_app/backend/.venv
+fantasy_analysis_app/backend/.venv/bin/pip install \
+  -r fantasy_analysis_app/backend/requirements.txt
+npm --prefix fantasy_analysis_app/frontend install
+
+make integrate
+
+# separate terminals
+cd fantasy_analysis_app/backend && .venv/bin/python manage.py runserver
+cd fantasy_analysis_app/frontend && npm run dev
+```
+
+`make integrate` reruns only the compact analysis export, not the NFL season simulation. Run
+`python -m nflsim simulate --sims 10000` first whenever the underlying simulated worlds need to
+be refreshed. The web request path reads a validated database snapshot and never imports NumPy,
+loads the 176 MB result archive, or runs games.
+
+The Draft Suggester deliberately keeps three kinds of evidence distinct:
+
+- league evidence: historical reaches, positional tendencies, loyalty, and manager burn history;
+- market evidence: ADP-calibrated availability now and at the next snake pick;
+- model evidence: simulated range, season-specific value over replacement, positional-title
+  equity, conditional injury leverage, playoff schedule delta, and joint upper-tail lift with
+  the roster already drafted.
+
+Run both products' checks from the repository root with `make test`.
 
 The HTML report includes a **draft decision lab**. Select two to four top-80
 players to compare the probability that each creates more value than the other
