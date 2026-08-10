@@ -60,6 +60,7 @@ python -m nflsim team --team PHI        # one team: usage, stats, correlations
 python -m nflsim outliers               # top seasons + biggest movers vs last year
 python -m nflsim validate               # check the engine against reality
 python -m nflsim export --out out/      # CSV + parquet
+python -m nflsim app-export             # versioned JSON for fantasy_analysis_app
 python -m nflsim factors --sims 2000    # controlled injury/role/scheme/context comparisons
 
 python -m nflsim draft --interactive    # mock draft against bots that follow ESPN ADP

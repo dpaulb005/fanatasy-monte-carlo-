@@ -496,6 +496,17 @@ def cmd_export(args):
           f"and projections.parquet to {out}/")
 
 
+def cmd_app_export(args):
+    """Write the stable, joint-distribution snapshot used by web applications."""
+    from .integration import write_application_snapshot
+
+    path = write_application_snapshot(
+        _load_bundle(), _load_result(), _scoring(args), _league(args),
+        Path(args.out), pair_horizon=args.pair_horizon,
+    )
+    print(f"wrote application snapshot to {path} ({path.stat().st_size / 1e6:.1f} MB)")
+
+
 def cmd_compare(args):
     b, res = _load_bundle(), _load_result()
     sc = _scoring(args)
@@ -654,6 +665,13 @@ def main(argv=None):
     e = common(sub.add_parser("export", help="write CSV / parquet output"))
     e.add_argument("--out", default="projections")
     e.set_defaults(func=cmd_export)
+
+    ae = common(sub.add_parser(
+        "app-export", help="write a versioned JSON snapshot for fantasy applications"))
+    ae.add_argument("--out", default="artifacts/application-snapshot.json")
+    ae.add_argument("--pair-horizon", type=int, default=180,
+                    help="overall-rank horizon retained for joint player-pair metrics")
+    ae.set_defaults(func=cmd_app_export)
 
     c = common(sub.add_parser("compare", help="head-to-head between two players"))
     c.add_argument("a")
